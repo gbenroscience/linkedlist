@@ -170,26 +170,23 @@ func main() {
 wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for i := 0; i <= 1000; i++ {
+			for i := 0; i <= 1; i++ {
 				list.Add(i)
 			}
-
 			fmt.Printf("list now has %d elements\n", list.Count())
 		}()
 	}
 
 	wg.Wait()
 
-
-
-
 	list.ForEach(Print)
+
+	list.RemoveIndex(3)
 
 	list.Log("Checking...")
 
-
-
 	time.Sleep(time.Second * 10)
 
+	fmt.Println(list.Get(3))
 
 }

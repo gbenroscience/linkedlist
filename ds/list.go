@@ -776,10 +776,7 @@ func (list *List) getBoundaryNodes() (*Node, *Node) {
 
 //Get - returns the element at that index in the list
 func (list *List) Get(index int) interface{} {
-	defer list.mu.Unlock()
-	list.mu.Lock()
 	return list.getNode(index).val
-
 }
 
 func (list *List) getLastNode() *Node {
@@ -1105,7 +1102,7 @@ func (list *List) log(optionalLabel string) {
 
 		appender := optionalLabel + ":\n ["
 
-		i := 0
+		i := 1
 
 		for x := list.getNode(i); i < list.size; x = x.next {
 			dType := reflect.TypeOf(x.val).Kind()
@@ -1125,6 +1122,7 @@ func (list *List) log(optionalLabel string) {
 
 			i++
 		}
+
 		appender += "], len: " + strconv.Itoa(list.size) + " confirm-len(" + strconv.Itoa(i) + "), startIndex: " + strconv.Itoa(list.startIndex) + ", endIndex: " + strconv.Itoa(list.endIndex)
 		fmt.Println(appender)
 
@@ -1134,7 +1132,7 @@ func (list *List) log(optionalLabel string) {
 			fmt.Println(optionalLabel + ":\n[], len: 0")
 			return
 		}
-		counter := 0
+		counter := 1
 		currentNode := list.firstNode
 		dType := reflect.TypeOf(currentNode.val).Kind()
 
