@@ -153,7 +153,7 @@ func test() {
 
 }
 func Print(x interface{}){
-	fmt.Printf("Printing list: found %d\n ", x)
+	fmt.Printf("Printing list: found %d\n", x)
 }
 
 
@@ -165,10 +165,10 @@ func main() {
 		list.Add(i)
 	}
 
-	fmt.Printf("list now has %d elements\n", list.Size)
+	fmt.Printf("list now has %d elements\n", list.Count())
 
 
-/*
+	/*
 	var x interface{}
 
 	for ; ; {
@@ -178,8 +178,8 @@ func main() {
 			break
 		}
 		fmt.Printf("Printing list: found %d\n ", x)
-	}*/
-
+	}
+*/
  list.ForEach(Print)
 
 
