@@ -9,7 +9,7 @@ You may watch this space for more updates as more work will probably be done on 
 
 
 
-# Iteration:
+## Iteration:
 
 To iterate through the list, do not use the list.Get(index) function as that runs in O(n) time and so will give you O(n<sup>2</sup>) performance.
 Instead , say you created the list like this:
