@@ -41,7 +41,32 @@ fmt.Printf("list now has %d elements\n" , list.Size))
 	}
  ```
 
+
 This allows you fetch consecutive items in the list in constant time and so the traversal over the entire list is done in O(n) time
+
+## Standard Iteration
+To have a standard way of iterating over this list in an efficient way, you may use the List.ForEach function.
+
+The function definition is:
+
+```Go
+  func (list *List) ForEach(function func(val interface{}))
+```
+
+
+
+An example would be:
+
+```Go
+func Print(x interface{}){
+	fmt.Printf("Printing list: found %d\n ", x)
+}
+
+ list.ForEach(Print)
+
+```
+The list will iterate over every element in it and call the function on each of them (e.g Print or whatever) 
+
 
 Please note that the iterator is a cyclic one.
 If it detects the end of the list, it resets, which allows you to break out of the loop, but once you repeat that loop, it starts all over again from the
