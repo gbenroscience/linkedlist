@@ -12,9 +12,11 @@ You may watch this space for more updates as more work will probably be done on 
 #Iteration:
 
 To iterate through the list, do not use the list.Get(index) function as that runs in O(n) time and so will give you O(n<sup>2</sup>) performance.
-Instead , say yui created the list like this:
+Instead , say you created the list like this:
 
+```Go
 list := ds.NewList()
+
 
 
 And then you populated it like this:
@@ -30,5 +32,8 @@ fmt.Printf("list now has %d elements\n" , list.Size))
  for x=list.Next(); x != nil;  x = list.Next(){
   //Use x for something
  }
+ 
+ ```
 
 This allows you fetch consecutive items in the list in constant time and so the traversal over the entire list is done in O(n) time
+
