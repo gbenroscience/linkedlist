@@ -1,14 +1,13 @@
 package main
 
 import (
-"bytes"
-"flag"
-"fmt"
+	"bytes"
+	"fmt"
 	"github.com/gbenroscience/linkedlist/ds"
 	"math"
-"math/rand"
-"strconv"
-"time"
+	"math/rand"
+	"strconv"
+	"time"
 )
 
 type Rect struct {
@@ -159,54 +158,24 @@ func test() {
 }
 func main() {
 
-	var sz int
-	var n int
+	list := ds.NewList()
 
-	flag.IntVar(&sz, "sz", 10, "The size of the list")
-	flag.IntVar(&n, "n", 100, "The largest random number to generate in populating the list")
-
-	flag.Parse()
-
-	data := new(ds.List)
-	rand.Seed(time.Now().UnixNano())
-
-	start := time.Now()
-
-	for i := 0; i < sz; i++ {
-		data.Add(rand.Intn(n))
+	for i:=0; i<1000; i++{
+		list.Add(i)
 	}
 
-	duration := time.Since(start).Nanoseconds()
+	fmt.Printf("list now has %d elements\n" , list.Size)
 
-	//data.Log("Contents Populated in :>> ")
+	var x interface{}
 
-	fmt.Println("Filled list in ", duration, "ns")
-
-	arr := make([]int, sz)
-
-	start = time.Now()
-
-	for i := 0; i < sz; i++ {
-		arr[i] = rand.Intn(n)
+	for x = list.Next(); x != nil;   {
+		fmt.Printf("Printing list: found %d\n " , x)
+		x = list.Next()
 	}
 
-	duration = time.Since(start).Nanoseconds()
-
-	fmt.Println("Added ", sz, "items to array in ", duration, "ns")
-
-	pos := sz / 2
-	start = time.Now()
-	val := data.Get(pos)
-	duration = time.Since(start).Nanoseconds()
-
-	fmt.Println("Fetched ", val, " from index ", pos, " in list in ", duration, "ns")
-
-	start = time.Now()
-	val = arr[pos]
-	duration = time.Since(start).Nanoseconds()
-
-	fmt.Println("Fetched ", val, " from index ", pos, " in array in ", duration, "ns")
 
 
-test()
+	list.Log("Checking...")
+
+
 }

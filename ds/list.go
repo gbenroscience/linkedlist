@@ -51,6 +51,43 @@ type List struct {
 	//This indices are -1 if the sublist field is nil
 	startIndex int
 	endIndex   int
+
+	iter *Node
+}
+
+func (list *List) Next() interface{} {
+
+	if list.firstNode == nil || list.lastNode == nil{
+		return nil
+	}
+
+	if list.firstNode != nil && list.iter == nil{
+		list.iter = list.firstNode
+		return list.iter.val
+	}
+
+	if list.firstNode == list.iter{
+		list.iter = list.firstNode.next
+		return list.iter.val
+	}
+
+	if list.iter != list.firstNode && list.iter != list.lastNode {
+		list.iter = list.iter.next
+		return list.iter.val
+	}
+	if list.lastNode == list.iter{
+		return nil
+	}
+
+	list.reset()
+	return nil
+}
+//Call this to reset the
+func (list *List) reset(){
+	if list.iter != nil{
+		list.iter = nil
+	}
+
 }
 
 func NewList() *List {
@@ -62,6 +99,7 @@ func NewList() *List {
 	list.parent = nil
 	list.startIndex = -1
 	list.endIndex = -1
+	list.iter = nil
 	return list
 }
 func (node *Node) initNode(prev *Node, val interface{}, next *Node) {
@@ -126,6 +164,8 @@ func (list *List) addNode(elem *Node) {
 
 	}
 }
+
+
 
 //TESTED
 func (list *List) AddValues(args ...interface{}) {
