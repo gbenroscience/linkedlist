@@ -99,9 +99,9 @@ func test() {
 
 	data.Log("MAIN_LIST")
 
-	smallList , err := data.SubList(5, 12)
+	smallList, err := data.SubList(5, 12)
 
-	if err == nil{
+	if err == nil {
 
 		smallList.Log("SUB_LIST")
 
@@ -127,15 +127,12 @@ func test() {
 		second.Add(10518902)
 
 		second.Log("SECOND-AAAA")
-		s , err := second.SubList(2 ,5)
+		s, err := second.SubList(2, 5)
 		s.Log("S-AAAA")
-		if err == nil{
+		if err == nil {
 			s.Clear()
 		}
 		second.Log("SECOND-AAAA---CLEAR")
-
-
-
 
 		second.Log("SECOND_LIST")
 
@@ -150,32 +147,48 @@ func test() {
 		smallList.Log("MAIN LIST CLEARED: SEE SUB_LIST")
 
 		data.Log("MAIN_LIST")
-	}else{
-		fmt.Printf("%v" , err)
+	} else {
+		fmt.Printf("%v", err)
 	}
 
-
 }
+func Print(x interface{}){
+	a += 1
+	fmt.Printf("Printing list: found %d\n ", x)
+}
+
+var(
+	a = 0
+)
 func main() {
 
 	list := ds.NewList()
 
-	for i:=0; i<1000; i++{
+	for i := 0; i < 1000; i++ {
 		list.Add(i)
 	}
 
-	fmt.Printf("list now has %d elements\n" , list.Size)
+	fmt.Printf("list now has %d elements\n", list.Size)
 
+
+/*
 	var x interface{}
 
-	for x = list.Next(); x != nil;   {
-		fmt.Printf("Printing list: found %d\n " , x)
+	for ; ; {
 		x = list.Next()
-	}
+		if x == nil {
+			fmt.Printf("Printing list: found ??? %v \n", x)
+			break
+		}
+		fmt.Printf("Printing list: found %d\n ", x)
+	}*/
+
+ list.ForEach(Print)
+
+ fmt.Printf("a = %d\n" , a)
 
 
-
+	fmt.Println("...............................................................................................................")
 	list.Log("Checking...")
-
 
 }

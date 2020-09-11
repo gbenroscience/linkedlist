@@ -52,42 +52,45 @@ type List struct {
 	startIndex int
 	endIndex   int
 
+	//Used for rapid iteration over the list
 	iter *Node
 }
 
 func (list *List) Next() interface{} {
 
-	if list.firstNode == nil || list.lastNode == nil{
+	if list.iter != nil{
+		if list.iter.next != nil{
+			list.iter = list.iter.next
+			return list.iter.val
+		}
+		list.resetIterator()
+		return nil
+	}else{
+		if list.firstNode != nil{
+			list.iter = list.firstNode
+			return list.Next()
+		}
 		return nil
 	}
 
-	if list.firstNode != nil && list.iter == nil{
-		list.iter = list.firstNode
-		return list.iter.val
-	}
-
-	if list.firstNode == list.iter{
-		list.iter = list.firstNode.next
-		return list.iter.val
-	}
-
-	if list.iter != list.firstNode && list.iter != list.lastNode {
-		list.iter = list.iter.next
-		return list.iter.val
-	}
-	if list.lastNode == list.iter{
-		return nil
-	}
-
-	list.reset()
-	return nil
 }
 //Call this to reset the
-func (list *List) reset(){
+func (list *List) resetIterator(){
 	if list.iter != nil{
 		list.iter = nil
 	}
 
+}
+
+func (list *List) ForEach( function func(val interface{}) ){
+	var x interface{}
+	for ; ; {
+		x = list.Next()
+		if x == nil {
+			break
+		}
+		function(x)
+	}
 }
 
 func NewList() *List {
