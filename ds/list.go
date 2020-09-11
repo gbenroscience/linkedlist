@@ -9,7 +9,6 @@ import (
 
 //AbstractList - An abstraction of a list
 type AbstractList interface {
-	NewList()
 	ToArray() []interface{}
 	addNode(elem *Node)
 	Add(val interface{})
@@ -54,7 +53,8 @@ type List struct {
 	endIndex   int
 }
 
-func (list *List) NewList() {
+func NewList() *List {
+	list := new(List)
 	list.length = 0
 	list.firstNode = nil
 	list.lastNode = nil
@@ -62,6 +62,7 @@ func (list *List) NewList() {
 	list.parent = nil
 	list.startIndex = -1
 	list.endIndex = -1
+	return list
 }
 func (node *Node) initNode(prev *Node, val interface{}, next *Node) {
 	node.prev = prev
@@ -503,14 +504,6 @@ func (list *List) syncAdditions(index int) {
 }
 
 
-func checkIndex(list *List , index int) bool{
-	return index >= 0 && index <= list.length
-}
-
-func checkRange(list *List , start int , end int) bool{
-	return start >= 0 && start < list.length && start <= end && end <= list.length
-}
-
 
 
 func (list *List) SubList(startIndex int, endIndex int) (*List , error) {
@@ -531,7 +524,7 @@ func (list *List) SubList(startIndex int, endIndex int) (*List , error) {
 
 
 	list.subList = new(List)
-	list.subList.NewList()
+	list.subList = NewList()
 	list.subList.firstNode = nil
 	list.subList.lastNode = nil
 	list.subList.parent = list
@@ -877,7 +870,7 @@ func (list *List) Log(optionalLabel string) {
 			if dType == reflect.String {
 				appender += x.val.(string) + ","
 			} else if dType == reflect.Int {
-				appender += strconv.Itoa(int(x.val.(int))) + ","
+				appender += strconv.Itoa(x.val.(int)) + ","
 			} else if dType == reflect.Int8 {
 				appender += strconv.Itoa(int(x.val.(int8))) + ","
 			} else if dType == reflect.Int16 {

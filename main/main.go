@@ -77,7 +77,7 @@ func test() {
 	appendText("GOD ", "IS HERE!!!")
 
 	data := new(ds.List)
-	data.NewList()
+	data = ds.NewList()
 
 	data.Add(3)
 	data.Add(8)
@@ -111,8 +111,7 @@ func test() {
 		data.Log("AFTER CLEARING SUB_LIST, MAIN_LIST")
 		smallList.Log("SUB_LIST")
 
-		second := new(ds.List)
-		second.NewList()
+		second := ds.NewList()
 
 		second.Add(5)
 		second.Add(205)
