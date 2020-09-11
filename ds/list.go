@@ -41,7 +41,7 @@ type Node struct {
 
 //List - The List
 type List struct {
-	length    int
+	Size      int
 	firstNode *Node
 	lastNode  *Node
 	subList   *List
@@ -55,7 +55,7 @@ type List struct {
 
 func NewList() *List {
 	list := new(List)
-	list.length = 0
+	list.Size = 0
 	list.firstNode = nil
 	list.lastNode = nil
 	list.subList = nil
@@ -76,24 +76,24 @@ func (list *List) ToArray() []interface{} {
 
 	if list.isSubList() {
 
-		result := make([]interface{}, list.length)
+		result := make([]interface{}, list.Size)
 
 		if len(result) == 0 {
 			return result
 		}
 
 		i := 0
-		for x := list.parent.getNode(list.startIndex); i < list.length; x = x.next {
+		for x := list.parent.getNode(list.startIndex); i < list.Size; x = x.next {
 			result[i] = x.val
 			i++
 		}
 		return result
 	} else {
 
-		result := make([]interface{}, list.length)
+		result := make([]interface{}, list.Size)
 
 		i := 0
-		for x := list.firstNode; i < list.length; x = x.next {
+		for x := list.firstNode; i < list.Size; x = x.next {
 			result[i] = x.val
 			i++
 		}
@@ -108,7 +108,7 @@ func (list *List) addNode(elem *Node) {
 	if list.isSubList() {
 
 		list.parent.addNodeAt(elem, list.endIndex)
-		list.length++
+		list.Size++
 		list.endIndex++
 
 	} else {
@@ -122,7 +122,7 @@ func (list *List) addNode(elem *Node) {
 			oldLastNode.next = elem
 			elem.prev = oldLastNode
 		}
-		list.length++
+		list.Size++
 
 	}
 }
@@ -137,8 +137,8 @@ func (list *List) AddValues(args ...interface{}) {
 		if list.IsEmpty() {
 			if list.startIndex == 0 {
 				endNode = list.parent.insertBefore(args[0], list.parent.firstNode)
-				list.parent.length++
-				list.length++
+				list.parent.Size++
+				list.Size++
 				list.endIndex++
 				skipFirst = true
 			} else {
@@ -146,7 +146,7 @@ func (list *List) AddValues(args ...interface{}) {
 			}
 
 		} else {
-			endNode = list.getNode(list.length - 1)
+			endNode = list.getNode(list.Size - 1)
 		}
 		i := 0
 		if skipFirst {
@@ -154,8 +154,8 @@ func (list *List) AddValues(args ...interface{}) {
 		}
 		for ; i < len(args); i++ {
 			endNode = list.parent.insertAfter(args[i], endNode)
-			list.parent.length++
-			list.length++
+			list.parent.Size++
+			list.Size++
 			list.endIndex++
 		}
 
@@ -176,13 +176,13 @@ func (list *List) AddArray(array []interface{}) {
 func (list *List) Add(val interface{}) {
 	if list.isSubList() {
 
-		if list.length == 0 {
+		if list.Size == 0 {
 			list.parent.AddVal(val, list.startIndex)
 		} else {
 			list.parent.AddVal(val, list.endIndex)
 		}
 		//list.parent.AddVal(val, list.endIndex+1)
-		list.length++
+		list.Size++
 		list.endIndex++
 	} else {
 		list.append(val)
@@ -198,7 +198,7 @@ func (list *List) Add(val interface{}) {
 func (list *List) addNodeAt(elem *Node, index int) bool {
 
 	if list.parent == nil {
-		if index == list.length {
+		if index == list.Size {
 			list.addNode(elem)
 		} else {
 
@@ -216,7 +216,7 @@ func (list *List) addNodeAt(elem *Node, index int) bool {
 			} else {
 				prev.next = elem
 			}
-			list.length++
+			list.Size++
 		}
 		list.syncAdditions(index)
 
@@ -231,7 +231,7 @@ func (list *List) AddVal(val interface{}, index int) bool {
 
 	if list.isSubList() {
 		success := list.parent.AddVal(val, index+list.startIndex)
-		list.length++
+		list.Size++
 		list.endIndex++
 		return success
 
@@ -252,7 +252,7 @@ func (list *List) removeNode(elem *Node) bool {
 		if list.containsNode(elem) {
 
 			succ := list.parent.removeNode(elem)
-			list.length--
+			list.Size--
 			list.endIndex--
 			return succ
 
@@ -278,7 +278,7 @@ func (list *List) removeNode(elem *Node) bool {
 		}
 
 		elem.val = nil
-		list.length--
+		list.Size--
 		return true
 	}
 
@@ -300,7 +300,7 @@ func (list *List) RemoveAll(lst *List) {
 			x = lst.firstNode
 		}
 
-		for i := 0; i < lst.length; i++ {
+		for i := 0; i < lst.Size; i++ {
 			list.Remove(x.val)
 			x = x.next
 		}
@@ -313,7 +313,7 @@ func (list *List) RemoveAll(lst *List) {
 		} else {
 			x = lst.firstNode
 		}
-		for i := 0; i < lst.length; i++ {
+		for i := 0; i < lst.Size; i++ {
 			list.Remove(x.val)
 			x = x.next
 		}
@@ -327,7 +327,7 @@ func (list *List) AddAll(lst *List) error {
 	//empty list
 
 	if lst.isSubList() {
-		if lst.length == 0 {
+		if lst.Size == 0 {
 			return errors.New("cant add empty sublist to a list")
 		}
 	} else {
@@ -336,35 +336,35 @@ func (list *List) AddAll(lst *List) error {
 		}
 	}
 
-	return list.AddAllAt(list.length, lst)
+	return list.AddAllAt(list.Size, lst)
 
 }
 
 func (list *List) IsEmpty() bool {
-	return list.length == 0 && list.firstNode == nil
+	return list.Size == 0 && list.firstNode == nil
 }
 
 func (list *List) AddAllAt(index int, lst *List) error {
 
 	if list.isSubList() {
 		err := list.parent.AddAllAt(list.startIndex+index, lst)
-		list.length += lst.length
-		list.endIndex = list.startIndex + list.length - 1
+		list.Size += lst.Size
+		list.endIndex = list.startIndex + list.Size - 1
 		return err
 	} else {
 
 		//empty list
-		if lst.firstNode == nil || index >= list.length || index < 0 {
+		if lst.firstNode == nil || index >= list.Size || index < 0 {
 			return errors.New("bad value for index or badly initialized list")
 		}
 
-		numNew := lst.length
+		numNew := lst.Size
 		if numNew == 0 {
 			return errors.New("empty parameter sublist found")
 		}
 		prev := new(Node)
 		succ := new(Node)
-		if index == list.length {
+		if index == list.Size {
 			succ = nil
 			prev = list.lastNode
 		} else {
@@ -394,7 +394,7 @@ func (list *List) AddAllAt(index int, lst *List) error {
 			succ.prev = prev
 		}
 
-		list.length += numNew
+		list.Size += numNew
 		return nil
 	}
 }
@@ -412,7 +412,7 @@ func (list *List) Remove(val interface{}) bool {
 		} else {
 			list.RemoveIndex(ind)
 
-			list.length--
+			list.Size--
 			list.endIndex--
 			return true
 		}
@@ -424,7 +424,7 @@ func (list *List) Remove(val interface{}) bool {
 		}
 
 		x := list.firstNode
-		for i := 0; i < list.length; i++ {
+		for i := 0; i < list.Size; i++ {
 			if x.val == val {
 				succ := list.removeNode(x)
 
@@ -480,7 +480,7 @@ func (list *List) syncRemoval(index int) {
 			list.subList.endIndex--
 		} else if index > list.subList.startIndex && index <= list.subList.endIndex {
 			list.subList.endIndex--
-			list.subList.length--
+			list.subList.Size--
 		}
 
 	}
@@ -497,31 +497,27 @@ func (list *List) syncAdditions(index int) {
 			list.subList.endIndex++
 		} else if index > list.subList.startIndex && index <= list.subList.endIndex {
 			list.subList.endIndex++
-			list.subList.length++
+			list.subList.Size++
 		}
 
 	}
 }
 
+func (list *List) SubList(startIndex int, endIndex int) (*List, error) {
 
-
-
-func (list *List) SubList(startIndex int, endIndex int) (*List , error) {
-
-	if endIndex > list.length {
-		panic(strconv.Itoa(endIndex) + " > " + strconv.Itoa(list.length) + " is not allowed")
+	if endIndex > list.Size {
+		panic(strconv.Itoa(endIndex) + " > " + strconv.Itoa(list.Size) + " is not allowed")
 	}
 
 	if startIndex < 0 {
-		return nil , errors.New(strconv.Itoa(startIndex) + " < 0 is not allowed")
+		return nil, errors.New(strconv.Itoa(startIndex) + " < 0 is not allowed")
 	}
 	if endIndex < 0 {
-		return nil , errors.New(strconv.Itoa(endIndex) + " < 0 is not allowed")
+		return nil, errors.New(strconv.Itoa(endIndex) + " < 0 is not allowed")
 	}
 	if list.isSubList() {
-		return nil , errors.New("sublist chaining not allowed. sublists of sublists cannot be made")
+		return nil, errors.New("sublist chaining not allowed. sublists of sublists cannot be made")
 	}
-
 
 	list.subList = new(List)
 	list.subList = NewList()
@@ -529,12 +525,12 @@ func (list *List) SubList(startIndex int, endIndex int) (*List , error) {
 	list.subList.lastNode = nil
 	list.subList.parent = list
 
-	list.subList.length = endIndex - startIndex
+	list.subList.Size = endIndex - startIndex
 
 	list.subList.startIndex = startIndex
 	list.subList.endIndex = endIndex - 1
 
-	return list.subList , nil
+	return list.subList, nil
 
 }
 
@@ -550,8 +546,8 @@ func (list *List) getNode(index int) *Node {
 		panic("Index=(" + strconv.Itoa(index) + ") < 0 is not allowed")
 	}
 
-	if index > list.length {
-		panic("Index=(" + strconv.Itoa(index) + ") > list-length=(" + strconv.Itoa(list.length) + ") is not allowed")
+	if index > list.Size {
+		panic("Index=(" + strconv.Itoa(index) + ") > list-Size=(" + strconv.Itoa(list.Size) + ") is not allowed")
 	}
 
 	if list.isSubList() {
@@ -559,7 +555,7 @@ func (list *List) getNode(index int) *Node {
 	}
 
 	// NOTE x >> y is same as x ÷ 2^y
-	if index < (list.length >> 1) {
+	if index < (list.Size >> 1) {
 		x := list.firstNode
 		for i := 0; i < index; i++ {
 			x = x.next
@@ -567,7 +563,7 @@ func (list *List) getNode(index int) *Node {
 		return x
 	} else {
 		x := list.lastNode
-		for i := list.length - 1; i > index; i-- {
+		for i := list.Size - 1; i > index; i-- {
 			x = x.prev
 		}
 		return x
@@ -591,7 +587,7 @@ func (list *List) getBoundaryNodes() (*Node, *Node) {
 
 		i := start
 
-		if list.length > list.parent.length-list.endIndex {
+		if list.Size > list.parent.Size-list.endIndex {
 
 			last = list.getLastNode()
 
@@ -633,7 +629,7 @@ func (list *List) IndexOf(val interface{}) int {
 		startNode := list.getNode(0)
 
 		i := 0
-		for x := startNode; i < list.length; x = x.next {
+		for x := startNode; i < list.Size; x = x.next {
 
 			if val == x.val {
 				return i
@@ -650,7 +646,7 @@ func (list *List) IndexOf(val interface{}) int {
 			return 0
 		}
 
-		for i := 0; i < list.length; i++ {
+		for i := 0; i < list.Size; i++ {
 
 			if val == x.val {
 				return i
@@ -669,7 +665,7 @@ func (list *List) indexOfNode(node *Node) int {
 		startNode := list.getNode(0)
 
 		i := 0
-		for x := startNode; i < list.length; x = x.next {
+		for x := startNode; i < list.Size; x = x.next {
 
 			if node == x {
 				return i
@@ -686,7 +682,7 @@ func (list *List) indexOfNode(node *Node) int {
 			return 0
 		}
 
-		for i := 0; i < list.length; i++ {
+		for i := 0; i < list.Size; i++ {
 
 			if node == x {
 				return i
@@ -721,7 +717,7 @@ func (list *List) prepend(val interface{}) {
 	} else {
 		f.prev = newNode
 	}
-	list.length++
+	list.Size++
 }
 
 /**
@@ -737,7 +733,57 @@ func (list *List) append(val interface{}) {
 	} else {
 		l.next = newNode
 	}
-	list.length++
+	list.Size++
+}
+
+/**
+ * Returns the (non-NULL) Node at the specified element index.
+ * The bounds parameter is a pointer to an array that will hold the
+ * pointers to the boundary nodes
+ */
+func (list *List) getNodesAt(start int, end int) []*Node {
+
+
+
+
+	if start == end || start > end || start < 0 || end < 0 {
+		return []*Node{}
+	}
+
+	var bounds = make([]*Node , 0)
+
+	first := list.getNode(start)
+
+	last := new(Node)
+
+	var x = first
+
+	i := start
+
+	//The end node is closer to the already found start node than the end node is close to the end of the list.
+	if end-start < list.Size-end {
+
+		for ; i < end; i++ {
+			x = x.next
+		}
+
+		last = x
+	} else {
+		len := list.Size
+
+		y := list.lastNode
+		for i = len - 1; i >= end; i-- {
+			y = y.prev
+		}
+		last = y
+
+	}
+
+	bounds = append(bounds, first)
+	bounds = append(bounds, last)
+
+	return bounds
+
 }
 
 /**
@@ -759,7 +805,7 @@ func (list *List) insertBefore(e interface{}, succ *Node) *Node {
 	} else {
 		prev.next = newNode
 	}
-	list.length++
+	list.Size++
 	return newNode
 }
 
@@ -783,7 +829,7 @@ func (list *List) insertAfter(e interface{}, succ *Node) *Node {
 	} else {
 		next.prev = newNode
 	}
-	list.length++
+	list.Size++
 
 	return newNode
 }
@@ -813,9 +859,9 @@ func (list *List) Clear() {
 
 		list.removeLinkedRange(begin, end)
 
-		list.parent.length -= list.length
+		list.parent.Size -= list.Size
 		list.endIndex = list.startIndex
-		list.length = 0
+		list.Size = 0
 
 	} else {
 		x := list.firstNode
@@ -829,12 +875,12 @@ func (list *List) Clear() {
 		}
 		list.firstNode = nil
 		list.lastNode = nil
-		list.length = 0
+		list.Size = 0
 
 		if list.subList != nil {
 			list.subList.startIndex = 0
 			list.subList.endIndex = 0
-			list.subList.length = 0
+			list.subList.Size = 0
 		}
 
 	}
@@ -856,7 +902,7 @@ func (list *List) Log(optionalLabel string) {
 
 	if list.isSubList() {
 
-		if list.length == 0 {
+		if list.Size == 0 {
 			fmt.Println(optionalLabel, ":\n[], len: 0")
 			return
 		}
@@ -865,7 +911,7 @@ func (list *List) Log(optionalLabel string) {
 
 		i := 0
 
-		for x := list.getNode(i); i < list.length; x = x.next {
+		for x := list.getNode(i); i < list.Size; x = x.next {
 			dType := reflect.TypeOf(x.val).Kind()
 			if dType == reflect.String {
 				appender += x.val.(string) + ","
@@ -883,7 +929,7 @@ func (list *List) Log(optionalLabel string) {
 
 			i++
 		}
-		appender += "], len: " + strconv.Itoa(list.length) + ", startIndex: " + strconv.Itoa(list.startIndex) + ", endIndex: " + strconv.Itoa(list.endIndex)
+		appender += "], len: " + strconv.Itoa(list.Size) + ", startIndex: " + strconv.Itoa(list.startIndex) + ", endIndex: " + strconv.Itoa(list.endIndex)
 		fmt.Println(appender)
 
 	} else {
@@ -911,7 +957,7 @@ func (list *List) Log(optionalLabel string) {
 			appender += "[" + strconv.Itoa(int(currentNode.val.(int64))) + ","
 		}
 
-		for currentNode.next != nil && counter < list.length {
+		for currentNode.next != nil && counter < list.Size {
 			dType = reflect.TypeOf(currentNode.next.val).Kind()
 			if dType == reflect.String {
 				appender += currentNode.next.val.(string) + ","
@@ -930,7 +976,7 @@ func (list *List) Log(optionalLabel string) {
 			currentNode = currentNode.next
 			counter++
 		}
-		appender += "], len: " + strconv.Itoa(list.length)
+		appender += "], len: " + strconv.Itoa(list.Size)
 		fmt.Println(appender)
 
 	}
