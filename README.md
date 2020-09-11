@@ -67,7 +67,12 @@ func Print(x interface{}){
 ```
 The list will iterate over every element in it and call the function on each of them (e.g Print or whatever) 
 
-
+Alternatively of course, you may do:
+```Go
+ list.ForEach(func(x interface{}) {
+   fmt.Printf("Printing list: found %d\n ", x)	 
+ })
+```
 Please note that the iterator is a cyclic one.
 If it detects the end of the list, it resets, which allows you to break out of the loop, but once you repeat that loop, it starts all over again from the
 begin. So you can iterate repeatedly over the same list
