@@ -10,18 +10,23 @@ import (
 
 const (
 	ChanSize = 1000
+	Shutdown = 1
 )
 
 func (list *List) process() {
 
+	defer func() {
+		close(list.writeChan)
+	}()
 	for {
 		select {
 
 		case x := <-list.writeChan:
+			if x.shutdown == Shutdown{
+				return
+			}
 			x.callback()
 			break
-
-
 		}
 	}
 
@@ -62,6 +67,7 @@ type Node struct {
 
 type DataTypePair struct {
 	callback func()
+	shutdown int
 }
 
 //List - The List
@@ -74,12 +80,9 @@ type List struct {
 	//This indices MUST BE -1 if the sublist field is nil
 	startIndex int
 	endIndex   int
-
 	mu sync.Mutex
-
 	//Used for rapid iteration over the list
 	iter *Node
-
 	//write data into list...used by the Add methods
 	writeChan chan DataTypePair
 }
@@ -577,7 +580,6 @@ func (list *List) removeIndex(index int) bool {
 				return succ
 			}
 			x = x.next
-
 		}
 		return false
 
@@ -1179,4 +1181,11 @@ func (list *List) log(optionalLabel string) {
 
 func (list *List) Count() int {
 	return list.size
+}
+
+func (list *List) Close() {
+	list.writeChan <- DataTypePair{
+		callback: nil,
+		shutdown: Shutdown,
+	}
 }
