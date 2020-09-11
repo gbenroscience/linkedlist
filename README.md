@@ -43,3 +43,7 @@ fmt.Printf("list now has %d elements\n" , list.Size))
 
 This allows you fetch consecutive items in the list in constant time and so the traversal over the entire list is done in O(n) time
 
+Please note that the iterator is a cyclic one.
+If it detects the end of the list, it resets, which allows you to break out of the loop, but once you repeat that loop, it starts all over again from the
+begin. So you can iterate repeatedly over the same list
+
