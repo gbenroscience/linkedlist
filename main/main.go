@@ -153,13 +153,10 @@ func test() {
 
 }
 func Print(x interface{}){
-	a += 1
 	fmt.Printf("Printing list: found %d\n ", x)
 }
 
-var(
-	a = 0
-)
+
 func main() {
 
 	list := ds.NewList()
@@ -185,7 +182,8 @@ func main() {
 
  list.ForEach(Print)
 
- fmt.Printf("a = %d\n" , a)
+
+
 
 
 	fmt.Println("...............................................................................................................")
