@@ -31,9 +31,14 @@ fmt.Printf("list now has %d elements\n" , list.Size))
  Then iterate over it like this:
  
  ```Go
- for x=list.Next(); x != nil;  x = list.Next(){
-  //Use x for something
- }
+	for ; ; {
+		x = list.Next()
+		if x == nil {
+			fmt.Printf("Printing list: found ??? %v ", x)
+			break
+		}
+		fmt.Printf("Printing list: found %d\n ", x)
+	}
  ```
 
 This allows you fetch consecutive items in the list in constant time and so the traversal over the entire list is done in O(n) time
