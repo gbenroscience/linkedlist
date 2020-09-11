@@ -50,7 +50,7 @@ begin. So you can iterate repeatedly over the same list
 
 
 ## Standard Iteration
-To have a standard way of iterating over this list in an efficient way, you may use the List.ForEach function.
+We have a standard way of iterating over this list in an efficient way: this is the List.ForEach function.
 
 The function definition is:
 
