@@ -7,6 +7,7 @@ import (
 	"math"
 	"math/rand"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -161,32 +162,34 @@ func main() {
 
 	list := ds.NewList()
 
-	for i := 0; i < 1000; i++ {
-		list.Add(i)
+	var wg sync.WaitGroup
+
+
+	for j:=1;j<=4;j++{
+
+wg.Add(1)
+		go func() {
+			defer wg.Done()
+			for i := 0; i <= 1000; i++ {
+				list.Add(i)
+			}
+
+			fmt.Printf("list now has %d elements\n", list.Count())
+		}()
 	}
 
-	fmt.Printf("list now has %d elements\n", list.Count())
-
-
-	/*
-	var x interface{}
-
-	for ; ; {
-		x = list.Next()
-		if x == nil {
-			fmt.Printf("Printing list: found ??? %v \n", x)
-			break
-		}
-		fmt.Printf("Printing list: found %d\n ", x)
-	}
-*/
- list.ForEach(Print)
+	wg.Wait()
 
 
 
 
+	list.ForEach(Print)
 
-	fmt.Println("...............................................................................................................")
 	list.Log("Checking...")
+
+
+
+	time.Sleep(time.Second * 10)
+
 
 }

@@ -8,28 +8,48 @@ import (
 	"sync"
 )
 
+const (
+	ChanSize = 1000
+)
+
+func (list *List) process() {
+
+	for {
+		select {
+
+		case x := <-list.writeChan:
+			x.callback()
+			break
+
+
+		}
+	}
+
+}
+
 //AbstractList - An abstraction of a list
 type AbstractList interface {
-	ToArray() []interface{}
-	addNode(elem *Node)
 	Add(val interface{})
-	addNodeAt(elem *Node, index int) bool
 	AddVal(val interface{}, index int) bool
-	removeNode(elem *Node) bool
-	RemoveAll(lst *List)
 	AddAll(lst *List)
-	IsEmpty() bool
 	AddAllAt(index int, lst *List)
+
 	Remove(val interface{}) bool
 	RemoveIndex(index int) bool
-	SubList(startIndex int, endIndex int) *List
-	getNode(index int) *Node
-	Get(index int) interface{}
-	getLastNode() *Node
-	LastElement() interface{}
-	IndexOf(val interface{}) int
-	Contains(val interface{}) bool
+	RemoveAll(lst *List)
 	Clear()
+
+	Get(index int) interface{}
+	ToArray() []interface{}
+	LastElement() interface{}
+
+	SubList(startIndex int, endIndex int) *List
+
+	IsEmpty() bool
+	Contains(val interface{}) bool
+
+	IndexOf(val interface{}) int
+
 	Log()
 }
 
@@ -40,64 +60,28 @@ type Node struct {
 	val  interface{}
 }
 
+type DataTypePair struct {
+	callback func()
+}
+
 //List - The List
 type List struct {
 	size      int
 	firstNode *Node
 	lastNode  *Node
 	subList   *List
-	parent *List
+	parent    *List
 	//This indices MUST BE -1 if the sublist field is nil
 	startIndex int
 	endIndex   int
 
+	mu sync.Mutex
+
 	//Used for rapid iteration over the list
 	iter *Node
 
-	mu sync.Mutex
-}
-
-func (list *List) Next() interface{} {
-
-	if list.iter != nil{
-		if list.iter.next != nil{
-			list.iter = list.iter.next
-			return list.iter.val
-		}
-		list.resetIterator()
-		return nil
-	}else{
-		if list.firstNode != nil{
-			list.iter = list.firstNode
-			return list.Next()
-		}
-		return nil
-	}
-
-}
-//Call this to reset the
-func (list *List) resetIterator(){
-	if list.iter != nil{
-		list.iter = nil
-	}
-
-}
-
-func (list *List) ForEach( function func(val interface{}) ){
-
-
-
-	list.mu.Lock()
-	defer list.mu.Unlock()
-	var x interface{}
-	for ; ; {
-		x = list.Next()
-		if x == nil {
-			break
-		}
-		function(x)
-	}
-
+	//write data into list...used by the Add methods
+	writeChan chan DataTypePair
 }
 
 func NewList() *List {
@@ -111,6 +95,9 @@ func NewList() *List {
 	list.endIndex = -1
 	list.iter = nil
 	list.mu = sync.Mutex{}
+	list.writeChan = make(chan DataTypePair, ChanSize)
+
+	go list.process()
 	return list
 }
 func (node *Node) initNode(prev *Node, val interface{}, next *Node) {
@@ -119,12 +106,51 @@ func (node *Node) initNode(prev *Node, val interface{}, next *Node) {
 	node.val = val
 }
 
+func (list *List) Next() interface{} {
+
+	if list.iter != nil {
+		if list.iter.next != nil {
+			list.iter = list.iter.next
+			return list.iter.val
+		}
+		list.resetIterator()
+		return nil
+	} else {
+		if list.firstNode != nil {
+			list.iter = list.firstNode
+			return list.Next()
+		}
+		return nil
+	}
+
+}
+
+//Call this to reset the
+func (list *List) resetIterator() {
+	if list.iter != nil {
+		list.iter = nil
+	}
+
+}
+
+func (list *List) ForEach(function func(val interface{})) {
+
+	defer list.mu.Unlock()
+	list.mu.Lock()
+	var x interface{}
+	for ; ; {
+		x = list.Next()
+		if x == nil {
+			break
+		}
+		function(x)
+	}
+
+}
+
 //[]int{1,4,293,4,9}
 //TESTED
 func (list *List) ToArray() []interface{} {
-
-	list.mu.Lock()
-	defer list.mu.Unlock()
 
 	if list.isSubList() {
 
@@ -179,15 +205,76 @@ func (list *List) addNode(elem *Node) {
 	}
 }
 
-
+//TESTED
+func (list *List) Add(val interface{}) {
+	list.writeChan <- DataTypePair{
+		callback: func() {
+			list.add(val)
+		},
+	}
+}
 
 //TESTED
+func (list *List) add(val interface{}) {
+
+	if list.isSubList() {
+
+		if list.size == 0 {
+			list.parent.addVal(val, list.startIndex)
+		} else {
+			list.parent.addVal(val, list.endIndex)
+		}
+		//list.parent.addVal(val, list.endIndex+1)
+		list.size++
+		list.endIndex++
+	} else {
+		list.append(val)
+	}
+
+}
+
+func (list *List) AddVal(val interface{}, index int) bool {
+
+	args := make([]interface{}, 0)
+	args = append(args, val, index)
+	list.writeChan <- DataTypePair{
+		callback: func() {
+			list.addVal(val, index)
+		},
+	}
+
+	return true
+}
+
+//TESTED
+func (list *List) addVal(val interface{}, index int) bool {
+
+	if list.isSubList() {
+		success := list.parent.addVal(val, index+list.startIndex)
+		list.size++
+		list.endIndex++
+		return success
+
+	} else {
+		elem := new(Node)
+		elem.next = nil
+		elem.val = val
+
+		return list.addNodeAt(elem, index)
+	}
+
+}
+
 func (list *List) AddValues(args ...interface{}) {
+	list.writeChan <- DataTypePair{
+		callback: func() {
+			list.addValues(args)
+		},
+	}
+}
 
-
-
-	list.mu.Lock()
-	defer list.mu.Unlock()
+//TESTED
+func (list *List) addValues(args ...interface{}) {
 
 	if list.isSubList() {
 
@@ -227,183 +314,32 @@ func (list *List) AddValues(args ...interface{}) {
 
 }
 
-//TESTED
 func (list *List) AddArray(array []interface{}) {
-	list.AddValues(array)
-}
-
-//TESTED
-func (list *List) Add(val interface{}) {
-
-
-	list.mu.Lock()
-	defer list.mu.Unlock()
-
-	if list.isSubList() {
-
-		if list.size == 0 {
-			list.parent.AddVal(val, list.startIndex)
-		} else {
-			list.parent.AddVal(val, list.endIndex)
-		}
-		//list.parent.AddVal(val, list.endIndex+1)
-		list.size++
-		list.endIndex++
-	} else {
-		list.append(val)
-	}
-
-}
-
-/**
- *
- *  Only parent lists should ever call this function!
- */
-//TESTED
-func (list *List) addNodeAt(elem *Node, index int) bool {
-
-	if list.parent == nil {
-		if index == list.size {
-			list.addNode(elem)
-		} else {
-
-			succ := list.getNode(index)
-
-			// assert succ != nil;
-			prev := succ.prev
-
-			elem.prev = succ.prev
-			elem.next = succ
-			succ.prev = elem
-
-			if prev == nil {
-				list.firstNode = elem
-			} else {
-				prev.next = elem
-			}
-			list.size++
-		}
-		list.syncAdditions(index)
-
-		return true
-	}
-	return false
-
-}
-
-//TESTED
-func (list *List) AddVal(val interface{}, index int) bool {
-
-
-	list.mu.Lock()
-	defer list.mu.Unlock()
-
-	if list.isSubList() {
-		success := list.parent.AddVal(val, index+list.startIndex)
-		list.size++
-		list.endIndex++
-		return success
-
-	} else {
-		elem := new(Node)
-		elem.next = nil
-		elem.val = val
-
-		return list.addNodeAt(elem, index)
-	}
-
-}
-
-func (list *List) removeNode(elem *Node) bool {
-
-
-	list.mu.Lock()
-	defer list.mu.Unlock()
-
-	if list.isSubList() {
-
-		if list.containsNode(elem) {
-
-			succ := list.parent.removeNode(elem)
-			list.size--
-			list.endIndex--
-			return succ
-
-		}
-		return false
-	} else {
-
-		next := elem.next
-		prev := elem.prev
-
-		if prev == nil {
-			list.firstNode = next
-		} else {
-			prev.next = next
-			elem.prev = nil
-		}
-
-		if next == nil {
-			list.lastNode = prev
-		} else {
-			next.prev = prev
-			elem.next = nil
-		}
-
-		elem.val = nil
-		list.size--
-		return true
-	}
-
-}
-
-//TESTED
-func (list *List) RemoveAll(lst *List) {
-
-
-	list.mu.Lock()
-	defer list.mu.Unlock()
-	//empty list
-	if lst.firstNode == nil {
-		return
-	}
-
-	if list.isSubList() {
-
-		x := new(Node)
-		if lst.isSubList() {
-			x = lst.getNode(0)
-		} else {
-			x = lst.firstNode
-		}
-
-		for i := 0; i < lst.size; i++ {
-			list.Remove(x.val)
-			x = x.next
-		}
-
-	} else {
-
-		x := new(Node)
-		if lst.isSubList() {
-			x = lst.getNode(0)
-		} else {
-			x = lst.firstNode
-		}
-		for i := 0; i < lst.size; i++ {
-			list.Remove(x.val)
-			x = x.next
-		}
-
+	list.writeChan <- DataTypePair{
+		callback: func() {
+			list.addArray(array)
+		},
 	}
 }
 
 //TESTED
-func (list *List) AddAll(lst *List) error {
+func (list *List) addArray(array []interface{}) {
+	list.addValues(array)
+}
 
+func (list *List) AddAll(lst *List) bool {
 
-	list.mu.Lock()
-	defer list.mu.Unlock()
+	list.writeChan <- DataTypePair{
+		callback: func() {
+			list.addAll(lst)
+		},
+	}
+
+	return true
+}
+
+//TESTED
+func (list *List) addAll(lst *List) error {
 
 	//empty list
 
@@ -417,22 +353,23 @@ func (list *List) AddAll(lst *List) error {
 		}
 	}
 
-	return list.AddAllAt(list.size, lst)
+	return list.addAllAt(list.size, lst)
 
 }
 
-func (list *List) IsEmpty() bool {
-	return list.size == 0 && list.firstNode == nil
+func (list *List) AddAllAt(index int, lst *List) bool {
+	list.writeChan <- DataTypePair{
+		callback: func() {
+			list.addAllAt(index, lst)
+		},
+	}
+	return true
 }
 
-func (list *List) AddAllAt(index int, lst *List) error {
-
-
-	list.mu.Lock()
-	defer list.mu.Unlock()
+func (list *List) addAllAt(index int, lst *List) error {
 
 	if list.isSubList() {
-		err := list.parent.AddAllAt(list.startIndex+index, lst)
+		err := list.parent.addAllAt(list.startIndex+index, lst)
 		list.size += lst.size
 		list.endIndex = list.startIndex + list.size - 1
 		return err
@@ -485,20 +422,101 @@ func (list *List) AddAllAt(index int, lst *List) error {
 }
 
 /**
+ *
+ *  Only parent lists should ever call this function!
+ */
+//TESTED
+func (list *List) addNodeAt(elem *Node, index int) bool {
+
+	if list.parent == nil {
+		if index == list.size {
+			list.addNode(elem)
+		} else {
+
+			succ := list.getNode(index)
+
+			// assert succ != nil;
+			prev := succ.prev
+
+			elem.prev = succ.prev
+			elem.next = succ
+			succ.prev = elem
+
+			if prev == nil {
+				list.firstNode = elem
+			} else {
+				prev.next = elem
+			}
+			list.size++
+		}
+		list.syncAdditions(index)
+
+		return true
+	}
+	return false
+
+}
+
+func (list *List) removeNode(elem *Node) bool {
+
+	if list.isSubList() {
+
+		if list.containsNode(elem) {
+
+			succ := list.parent.removeNode(elem)
+			list.size--
+			list.endIndex--
+			return succ
+
+		}
+		return false
+	} else {
+
+		next := elem.next
+		prev := elem.prev
+
+		if prev == nil {
+			list.firstNode = next
+		} else {
+			prev.next = next
+			elem.prev = nil
+		}
+
+		if next == nil {
+			list.lastNode = prev
+		} else {
+			next.prev = prev
+			elem.next = nil
+		}
+
+		elem.val = nil
+		list.size--
+		return true
+	}
+
+}
+func (list *List) Remove(val interface{}) bool {
+
+	list.writeChan <- DataTypePair{
+		callback: func() {
+			list.remove(val)
+		},
+	}
+	return true
+}
+
+/**
  * Remove the first node that has
  * the same value as the parameter
  */
-func (list *List) Remove(val interface{}) bool {
+func (list *List) remove(val interface{}) bool {
 
-
-	list.mu.Lock()
-	defer list.mu.Unlock()
 	if list.isSubList() {
 		ind := list.IndexOf(val)
 		if ind == -1 {
 			return false
 		} else {
-			list.RemoveIndex(ind)
+			list.removeIndex(ind)
 
 			list.size--
 			list.endIndex--
@@ -533,11 +551,18 @@ func (list *List) Remove(val interface{}) bool {
 
 func (list *List) RemoveIndex(index int) bool {
 
+	list.writeChan <- DataTypePair{
+		callback: func() {
+			list.removeIndex(index)
+		},
+	}
+	return true
+}
 
-	list.mu.Lock()
-	defer list.mu.Unlock()
+func (list *List) removeIndex(index int) bool {
+
 	if list.isSubList() {
-		return list.parent.RemoveIndex(index + list.startIndex)
+		return list.parent.removeIndex(index + list.startIndex)
 	} else {
 
 		x := list.firstNode
@@ -558,6 +583,58 @@ func (list *List) RemoveIndex(index int) bool {
 
 	}
 
+}
+
+func (list *List) RemoveAll(lst *List) bool {
+
+	list.writeChan <- DataTypePair{
+		callback: func() {
+			list.removeAll(lst)
+		},
+	}
+	return true
+}
+
+//TESTED
+func (list *List) removeAll(lst *List) {
+
+	//empty list
+	if lst.firstNode == nil {
+		return
+	}
+
+	if list.isSubList() {
+
+		x := new(Node)
+		if lst.isSubList() {
+			x = lst.getNode(0)
+		} else {
+			x = lst.firstNode
+		}
+
+		for i := 0; i < lst.size; i++ {
+			list.remove(x.val)
+			x = x.next
+		}
+
+	} else {
+
+		x := new(Node)
+		if lst.isSubList() {
+			x = lst.getNode(0)
+		} else {
+			x = lst.firstNode
+		}
+		for i := 0; i < lst.size; i++ {
+			list.remove(x.val)
+			x = x.next
+		}
+
+	}
+}
+
+func (list *List) IsEmpty() bool {
+	return list.size == 0 && list.firstNode == nil
 }
 
 /**
@@ -595,10 +672,9 @@ func (list *List) syncAdditions(index int) {
 }
 
 func (list *List) SubList(startIndex int, endIndex int) (*List, error) {
-
-
-	list.mu.Lock()
 	defer list.mu.Unlock()
+	list.mu.Lock()
+
 	if endIndex > list.size {
 		panic(strconv.Itoa(endIndex) + " > " + strconv.Itoa(list.size) + " is not allowed")
 	}
@@ -700,11 +776,8 @@ func (list *List) getBoundaryNodes() (*Node, *Node) {
 
 //Get - returns the element at that index in the list
 func (list *List) Get(index int) interface{} {
-
-
-	list.mu.Lock()
 	defer list.mu.Unlock()
-
+	list.mu.Lock()
 	return list.getNode(index).val
 
 }
@@ -718,14 +791,19 @@ func (list *List) getLastNode() *Node {
 }
 
 func (list *List) LastElement() interface{} {
+	defer list.mu.Unlock()
+	list.mu.Lock()
 	return list.getLastNode().val
 }
 
+func (list *List) Contains(val interface{}) bool {
+	return list.IndexOf(val) != -1
+
+}
+
 func (list *List) IndexOf(val interface{}) int {
-
-
-	list.mu.Lock()
 	defer list.mu.Unlock()
+	list.mu.Lock()
 	if list.isSubList() {
 		startNode := list.getNode(0)
 
@@ -796,10 +874,7 @@ func (list *List) indexOfNode(node *Node) int {
 	}
 
 }
-func (list *List) Contains(val interface{}) bool {
-	return list.IndexOf(val) != -1
 
-}
 func (list *List) containsNode(node *Node) bool {
 	return list.indexOfNode(node) != -1
 
@@ -844,14 +919,11 @@ func (list *List) append(val interface{}) {
  */
 func (list *List) getNodesAt(start int, end int) []*Node {
 
-
-
-
 	if start == end || start > end || start < 0 || end < 0 {
 		return []*Node{}
 	}
 
-	var bounds = make([]*Node , 0)
+	var bounds = make([]*Node, 0)
 
 	first := list.getNode(start)
 
@@ -934,7 +1006,18 @@ func (list *List) insertAfter(e interface{}, succ *Node) *Node {
 
 	return newNode
 }
-func (list *List) Clear() {
+
+func (list *List) Clear() bool {
+
+	list.writeChan <- DataTypePair{
+		callback: func() {
+			list.clear()
+		},
+	}
+	return true
+}
+
+func (list *List) clear() {
 
 	if list.isSubList() {
 
@@ -1000,11 +1083,19 @@ func (list *List) removeLinkedRange(startNode *Node, stopNode *Node) {
 
 }
 
-func (list *List) Log(optionalLabel string) {
+func (list *List) Log(optionalLabel string) bool {
 
+	list.writeChan <- DataTypePair{
+		callback: func() {
+			list.log(optionalLabel)
+		},
+	}
 
-	list.mu.Lock()
-	defer list.mu.Unlock()
+	return true
+}
+
+func (list *List) log(optionalLabel string) {
+
 	if list.isSubList() {
 
 		if list.size == 0 {
@@ -1034,7 +1125,7 @@ func (list *List) Log(optionalLabel string) {
 
 			i++
 		}
-		appender += "], len: " + strconv.Itoa(list.size) + ", startIndex: " + strconv.Itoa(list.startIndex) + ", endIndex: " + strconv.Itoa(list.endIndex)
+		appender += "], len: " + strconv.Itoa(list.size) + " confirm-len(" + strconv.Itoa(i) + "), startIndex: " + strconv.Itoa(list.startIndex) + ", endIndex: " + strconv.Itoa(list.endIndex)
 		fmt.Println(appender)
 
 	} else {
@@ -1081,15 +1172,13 @@ func (list *List) Log(optionalLabel string) {
 			currentNode = currentNode.next
 			counter++
 		}
-		appender += "], len: " + strconv.Itoa(list.size)
+		appender += "], len: " + strconv.Itoa(list.size) + " , confirm-len(" + strconv.Itoa(counter) + ")"
 		fmt.Println(appender)
 
 	}
 
 }
 
-func (list *List) Count() int{
-	list.mu.Lock()
-	defer list.mu.Unlock()
+func (list *List) Count() int {
 	return list.size
 }
