@@ -1,17 +1,45 @@
 # linkedlist
 
-This is a linkedlist implementation.
+This is a thread safe linkedlist implementation for Golang.
 It may store any type of object.
 
-For now it is not thread safe, so thread safety has to be added by the client code
-
-You may watch this space for more updates as more work will probably be done on the list.
-
+ 
+## Features
 
 
-## Iteration:
 
-To iterate through the list, do not use the list.Get(index) function as that runs in O(n) time and so will give you O(n<sup>2</sup>) performance.
+1. Thread safety in concurrent access is ensured by using channels.
+Always call the Close() function when done with the list however.
+
+This ensures that the channels that ensure thread safety are closed and the for-select construct is exited.
+
+2. Allows greater manipulation using sublists. You can manipulate portions of the list as though they were a list!
+I would limit this to the basest operations and also, DO NOT create sublists of a sublist.
+
+3. Allows quick iteration using the <b>ForEach</b> function
+
+The idiomatic way to iterate over the list is:
+
+ ```Go
+	for ; ; {
+		x = list.Next()
+		if x == nil {
+			fmt.Printf("Printing list: found ??? %v ", x)
+			break
+		}
+		fmt.Printf("Printing list: found %d\n ", x)
+	}
+ ```
+
+But we have added an even more convenient and standard way using the <b>ForEach</b> function
+
+```Go
+  func (list *List) ForEach(function func(val interface{}))
+```
+
+### More on Iteration:
+
+To iterate through the list, do not use the list.Get(index) function in a loop as that runs in O(n) time and so will give you O(n<sup>2</sup>) performance.
 Instead , say you created the list like this:
 
 ```Go
@@ -49,16 +77,13 @@ If it detects the end of the list, it resets, which allows you to break out of t
 begin. So you can iterate repeatedly over the same list
 
 
-## Standard Iteration
-We have a standard way of iterating over our lists in an efficient way in the List.ForEach function.
+## Using the ForEach function For Iteration
 
-The function definition is:
+This function is defined as:
 
 ```Go
   func (list *List) ForEach(function func(val interface{}))
 ```
-
-
 
 An example would be:
 
