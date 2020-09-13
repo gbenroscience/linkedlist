@@ -170,7 +170,7 @@ func main() {
 wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for i := 0; i <= 1; i++ {
+			for i := 0; i <= 10000; i++ {
 				list.Add(i)
 			}
 			fmt.Printf("list now has %d elements\n", list.Count())

@@ -1183,9 +1183,11 @@ func (list *List) Count() int {
 	return list.size
 }
 
-func (list *List) Close() {
+func (list *List) Close() error{
 	list.writeChan <- DataTypePair{
 		callback: nil,
 		shutdown: Shutdown,
 	}
+
+	return nil
 }
