@@ -25,7 +25,9 @@ func (list *List) process() {
 			if x.shutdown == Shutdown{
 				return
 			}
+			list.mu.Lock()
 			x.callback()
+			list.mu.Unlock()
 			break
 		}
 	}
@@ -109,7 +111,7 @@ func (node *Node) initNode(prev *Node, val interface{}, next *Node) {
 	node.val = val
 }
 
-func (list *List) Next() interface{} {
+func (list *List) next() interface{} {
 
 	if list.iter != nil {
 		if list.iter.next != nil {
@@ -121,7 +123,7 @@ func (list *List) Next() interface{} {
 	} else {
 		if list.firstNode != nil {
 			list.iter = list.firstNode
-			return list.Next()
+			return list.next()
 		}
 		return nil
 	}
@@ -142,7 +144,7 @@ func (list *List) ForEach(function func(val interface{})) {
 	list.mu.Lock()
 	var x interface{}
 	for ; ; {
-		x = list.Next()
+		x = list.next()
 		if x == nil {
 			break
 		}
@@ -150,6 +152,7 @@ func (list *List) ForEach(function func(val interface{})) {
 	}
 
 }
+
 
 //[]int{1,4,293,4,9}
 //TESTED
@@ -778,6 +781,8 @@ func (list *List) getBoundaryNodes() (*Node, *Node) {
 
 //Get - returns the element at that index in the list
 func (list *List) Get(index int) interface{} {
+	defer list.mu.Unlock()
+	list.mu.Lock()
 	return list.getNode(index).val
 }
 
