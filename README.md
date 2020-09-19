@@ -26,9 +26,9 @@ e.g.
 
 package main
 
-func testAdd(n int) *dsn.List {
+func testAdd(n int) *ds.List {
 
-	list := dsn.NewList()
+	list := ds.NewList()
 	for i := 0; i < n; i++ {
 		list.Add(i)
 	}
@@ -70,7 +70,7 @@ If the <code>freeSubList</code> above is modified, the changes no longer reflect
 
 3. Allows quick iteration using the <b>ForEach</b> function
 
-The idiomatic way to iterate over the list is:
+The old way to iterate over the list was:
 
  ```Go
 	for ; ; {
