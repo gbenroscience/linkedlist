@@ -890,9 +890,7 @@ func (list *List) log(optionalLabel string) {
 	sz := list.count()
 
 	for ; x != nil; x = x.next {
-		if optionalLabel == "sublist"{
-			fmt.Printf("x = %v\n" , *x)
-		}
+
 		bld.WriteString(fmt.Sprintf("%v", x.val))
 		counter++
 		if x == list.lastNode {
@@ -917,13 +915,11 @@ func (list *List) sync() {
 
 	//Check for list beheading!...Head removed
 	if list.firstNode == nil {
-		fmt.Println("Oops. This list was beheaded prior to this action! List beheading is not supported for sublists!")
 		return
 	}
 
 	//Check for list tail docking... the tail was removed
 	if list.lastNode == nil {
-		fmt.Println("Oops. This list was tail-docked(the tail was removed) prior to this action! Tail docking is not supported for sublists!")
 		return
 	}
 
