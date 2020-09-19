@@ -56,7 +56,7 @@ func approxCubeRoot(x float64) {
 		root = root - ((root*root*root)-x)/(3*root*root)
 	}
 
-	fmt.Printf("Approx CubeRoot: %17d Real CubeRoot: %17d\n", root, math.Cbrt(x))
+	fmt.Printf("Approx CubeRoot: %7f Real CubeRoot: %7f\n", root, math.Cbrt(x))
 
 }
 
@@ -153,24 +153,23 @@ func test() {
 	}
 
 }
-func Print(x interface{}){
+func Print(x interface{})  bool{
 	fmt.Printf("Printing list: found %d\n", x)
+	return true
 }
 
-
-func main() {
+func test1() {
 
 	list := ds.NewList()
 
 	var wg sync.WaitGroup
 
+	for j := 1; j <= 4; j++ {
 
-	for j:=1;j<=4;j++{
-
-wg.Add(1)
+		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			for i := 0; i <= 10000; i++ {
+			for i := 0; i < 100; i++ {
 				list.Add(i)
 			}
 			fmt.Printf("list now has %d elements\n", list.Count())
@@ -188,5 +187,29 @@ wg.Add(1)
 	time.Sleep(time.Second * 10)
 
 	fmt.Println(list.Get(3))
+}
+
+func test2() {
+
+	list := ds.NewList()
+
+	for i := 0; i < 10; i++ {
+		list.Add(i)
+	}
+	fmt.Printf("list now has %d elements\n", list.Count())
+
+	list.ForEach(Print)
+
+	list.RemoveIndex(3)
+
+	list.Log("Checking...")
+
+	time.Sleep(time.Second * 10)
+
+	fmt.Println(list.Get(3))
+}
+
+func main() {
+	test1()
 
 }
