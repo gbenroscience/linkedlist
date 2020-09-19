@@ -341,15 +341,40 @@ func runSuite4() {
 
 	testSubListWoesWhenParentChanged(50, 20, 40)
 
-	testSubListClear(50, 0, 30)
+	testSubListClear(50, 22, 30)
+}
+
+func runSuite5(){
+
+	list := testAdd(10)
+	subList , _ := list.SubList(3, 7)
+	list.Log("MainList")
+	subList.Log("SubList")
+
+	subList.Clear()
+
+	list.Log("MainList")
+	subList.Log("SubList")
+
+
+	subList.AddValues(2,9,8)
+
+	list.Log("MainList")
+	subList.Log("SubList")
+
+
+
 }
 func main() {
 
-	runSuite1()
+/*	runSuite1()
 	runSuite2()
 	runSuite3()
-	runSuite4()
 
-	time.Sleep(time.Second * 8)
+	runSuite4()
+*/
+
+	runSuite5()
+	time.Sleep(time.Second * 4)
 
 }

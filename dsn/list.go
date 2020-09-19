@@ -776,7 +776,7 @@ func (list *List) clear() {
 
 		defer func() {
 			if list.parent != nil{
-				 //list.close()
+				list.parent = nil
 			}
 		}()
 
