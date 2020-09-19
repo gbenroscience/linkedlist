@@ -83,7 +83,7 @@ The old way to iterate over the list was:
 	}
  ```
 
-But we have added an even more convenient and standard way using the <b>ForEach</b> function
+But we have removed the list.Next() method. The standard way to iterate over the list now is to use the <b>ForEach</b> function.
 
 ```Go
   func (list *List) ForEach(function func(val interface{}))
