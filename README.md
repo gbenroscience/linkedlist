@@ -111,14 +111,11 @@ fmt.Printf("list now has %d elements\n" , list.Size))
  Then iterate over it like this:
  
  ```Go
-	for ; ; {
-		x = list.Next()
-		if x == nil {
-			fmt.Printf("Printing list: found ??? %v ", x)
-			break
-		}
-		fmt.Printf("Printing list: found %d\n ", x)
-	}
+	list.ForEach(func(x interface{}) bool{
+	   //do stuff
+	   
+	   return true// if you want the loop to continue to the end, return true. If you want the function to break out, return false.
+	})
  ```
 
 
