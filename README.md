@@ -12,7 +12,57 @@ It may store any type of object.
 Thread safety using channels has been removed due to various issues with it.
 
 2. Allows greater manipulation using sublists. You can manipulate portions of the list as though they were a list!
-I would limit this to the basest operations and also, DO NOT create sublists of a sublist.
+I would limit this to the basest operations.
+
+Create sublists only if you really need to!
+They behave like normal lists too, presenting a view of protions of the list.
+e.g.
+
+```Go
+
+package main
+
+func testAdd(n int) *dsn.List {
+
+	list := dsn.NewList()
+	for i := 0; i < n; i++ {
+		list.Add(i)
+	}
+
+	return list
+}
+
+func main(){
+
+list := testAdd(10)//adds 50 ints (from 0 to 9) to the list e.g. [0,1,2,3,4,5,6,7,8,9]
+
+subList, err := list.SubList(2, 8)
+if err != nil{
+//handle error here
+}
+//The sublist here now contains [2,3,4,5,6,7]
+
+subList.Clear()
+//The Clear command empties the sublist and also clears the portion of the list occupied by the sublist. The list now contains: [0,1,8,9]
+
+
+}
+
+```
+
+Changes made to the sublist (add , remove, clear, update) are reflected in the parent list.
+If you clear the sublist, it becomes detached from its parent.
+Changes made to the sublist are no longer propagated to the sublist
+
+If you need to have a sublist of a list independent of the original list, then create the sublist as above and call the Clone method o it e.g:
+
+
+```Go
+freeSubList := subList.Clone()
+```
+
+If the <code>freeSubList</code> above is modified, the changes no longer reflect on the main list.
+
 
 3. Allows quick iteration using the <b>ForEach</b> function
 
