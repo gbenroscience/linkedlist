@@ -1,7 +1,5 @@
 package ds
 
-
-
 import (
 	"errors"
 	"fmt"
@@ -9,12 +7,6 @@ import (
 	"strings"
 	"sync"
 )
-
-const (
-	Shutdown = 1
-)
-
-
 
 // AbstractList - An abstraction of a list
 type AbstractList interface {
@@ -81,7 +73,6 @@ func NewList() *List {
 
 	return list
 }
-
 
 func initNode(prev *Node, val interface{}, next *Node) *Node {
 	node := new(Node)
@@ -292,7 +283,6 @@ func (list *List) AddAll(lst *List) bool {
 
 	list.mu.Lock()
 	_ = list.addAll(lst)
-
 
 	return true
 }
@@ -770,13 +760,6 @@ func (list *List) clear() {
 	last := list.lastNode
 
 	if first != nil && last != nil {
-
-		defer func() {
-			if list.parent != nil{
-				//list.close()
-			}
-		}()
-
 		/**
 		Must be a sublist embedded inside a list
 		[23,9,10,12,34,28,99,55,32]--parent
@@ -789,6 +772,7 @@ func (list *List) clear() {
 
 			checkForNodeBeforeFirst.next = checkForNodeBeyondLast
 			checkForNodeBeyondLast.prev = checkForNodeBeforeFirst
+
 		}
 
 		/**
@@ -821,14 +805,17 @@ func (list *List) clear() {
 		x = next
 		return true
 	})
-	if list.parent != nil {
-		list.parent.decrementSize(sz)
-	}
+
 
 	list.firstNode = nil
 	list.lastNode = nil
-	list.iter = nil
 	list.size = 0
+	list.iter = nil
+	list.nodeIter = nil
+
+	if list.parent != nil {
+		list.parent.decrementSize(sz)
+	}
 
 }
 
@@ -874,7 +861,6 @@ func (list *List) Log(optionalLabel string) bool {
 	list.mu.Lock()
 	list.log(optionalLabel)
 
-
 	return true
 }
 
@@ -895,8 +881,10 @@ func (list *List) log(optionalLabel string) {
 
 	sz := list.count()
 
-
 	for ; x != nil; x = x.next {
+		if optionalLabel == "sublist"{
+			fmt.Printf("x = %v\n" , *x)
+		}
 		bld.WriteString(fmt.Sprintf("%v", x.val))
 		counter++
 		if x == list.lastNode {
@@ -921,14 +909,24 @@ func (list *List) sync() {
 
 	//Check for list beheading!...Head removed
 	if list.firstNode == nil {
-		panic("Oops. This list was beheaded prior to this action! List beheading is not supported for sublists!")
+		fmt.Println("Oops. This list was beheaded prior to this action! List beheading is not supported for sublists!")
 		return
 	}
 
 	//Check for list tail docking... the tail was removed
 	if list.lastNode == nil {
-		panic("Oops. This list was tail-docked(the tail was removed) prior to this action! Tail docking is not supported for sublists!")
+		fmt.Println("Oops. This list was tail-docked(the tail was removed) prior to this action! Tail docking is not supported for sublists!")
 		return
+	}
+
+	if list.firstNode.prev == nil && list.firstNode.val == nil && list.firstNode.next == nil {
+		list.firstNode = nil
+		list.lastNode = nil
+		list.iter = nil
+		list.nodeIter = nil
+		list.parent = nil
+		list.parenLen = 0
+		list.size = 0
 	}
 
 	//Run core sync method functionality only if the list has a parent
@@ -953,7 +951,6 @@ func (list *List) count() int {
 	list.sync()
 	return list.size
 }
-
 
 func (list *List) Count() int {
 	defer list.mu.Unlock()

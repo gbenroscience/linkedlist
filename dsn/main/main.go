@@ -348,7 +348,7 @@ func runSuite5(){
 
 	list := testAdd(10)
 	subList , _ := list.SubList(3, 7)
-	sublist := subList.Clone()
+	sublist , _ := list.SubList(3, 7)
 	list.Log("MainList")
 	subList.Log("SubList")
 	sublist.Log("sublist")
