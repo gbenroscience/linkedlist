@@ -926,14 +926,12 @@ func (list *List) sync() {
 
 	//Check for list beheading!...Head removed
 	if list.firstNode == nil {
-		defer list.Close()
 		panic("Oops. This list was beheaded prior to this action! List beheading is not supported for sublists!")
 		return
 	}
 
 	//Check for list tail docking... the tail was removed
 	if list.lastNode == nil {
-		defer list.Close()
 		panic("Oops. This list was tail-docked(the tail was removed) prior to this action! Tail docking is not supported for sublists!")
 		return
 	}
@@ -959,24 +957,4 @@ func (list *List) sync() {
 func (list *List) Count() int {
 	list.sync()
 	return list.size
-}
-
-func (list *List) Close() error {
-
-	list.close()
-
-	return nil
-}
-
-func (list *List) close() {
-
-	if list.parent == nil {
-		list.firstNode = nil
-		list.lastNode = nil
-	}
-	list.iter = nil
-	list.nodeIter = nil
-	list.size = 0
-
-
 }
