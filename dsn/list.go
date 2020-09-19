@@ -1,5 +1,4 @@
-package ds
-
+package dsn
 
 
 import (
@@ -204,7 +203,7 @@ func (list *List) forEachNode(function func(node *Node) bool) {
 //TESTED
 func (list *List) ToArray() []interface{} {
 
-	result := make([]interface{}, list.count())
+	result := make([]interface{}, list.Count())
 
 	i := 0
 	list.ForEach(func(x interface{}) bool {
@@ -299,7 +298,7 @@ func (list *List) AddAll(lst *List) bool {
 
 //TESTED
 func (list *List) addAll(lst *List) error {
-	err := list.addAllAt(list.count(), lst)
+	err := list.addAllAt(list.Count(), lst)
 	return err
 }
 
@@ -312,7 +311,7 @@ func (list *List) AddAllAt(index int, lst *List) bool {
 	return true
 }
 
-func (list *List) Clone() *List {
+func (list *List) Duplicate() *List {
 
 	ls := new(List)
 
@@ -328,14 +327,14 @@ func (list *List) Clone() *List {
 
 func (list *List) addAllAt(index int, lst *List) error {
 
-	sz := list.count()
+	sz := list.Count()
 	//empty list
 	if lst.firstNode == nil || index > sz || index < 0 {
 		return errors.New("bad value for index or badly initialized list")
 	}
-	dup := lst.Clone()
+	dup := lst.Duplicate()
 
-	numNew := dup.count()
+	numNew := dup.Count()
 	if numNew == 0 {
 		return errors.New("empty parameter sublist found")
 	}
@@ -378,7 +377,7 @@ func (list *List) addAllAt(index int, lst *List) error {
 //TESTED
 func (list *List) addNodeAt(elem *Node, index int) (bool, error) {
 
-	sz := list.count()
+	sz := list.Count()
 	if index >= 0 && index <= sz {
 
 		if index == sz {
@@ -405,7 +404,7 @@ func (list *List) addNodeAt(elem *Node, index int) (bool, error) {
 		return true, nil
 
 	} else {
-		return false, errors.New("index must lie between 0 and " + strconv.Itoa(list.count()))
+		return false, errors.New("index must lie between 0 and " + strconv.Itoa(list.Count()))
 	}
 
 }
@@ -484,7 +483,7 @@ func (list *List) remove(val interface{}) bool {
 	}
 
 	x := list.firstNode
-	sz := list.count()
+	sz := list.Count()
 	for i := 0; i < sz; i++ {
 		if x.val == val {
 			succ := list.removeNode(x)
@@ -523,7 +522,7 @@ func (list *List) removeAll(lst *List) {
 
 	x := lst.firstNode
 
-	sz := lst.count()
+	sz := lst.Count()
 
 	for i := 0; i < sz; i++ {
 		list.remove(x.val)
@@ -533,7 +532,7 @@ func (list *List) removeAll(lst *List) {
 }
 
 func (list *List) IsEmpty() bool {
-	return list.count() == 0 && list.firstNode == nil
+	return list.Count() == 0 && list.firstNode == nil
 }
 
 // SubList ...Creates a view of the list... starting at startIndex and ending at endIndex-1.
@@ -545,7 +544,7 @@ func (list *List) SubList(startIndex int, endIndex int) (*List, error) {
 	if startIndex < 0 {
 		return nil, errors.New("startIndex(" + strconv.Itoa(startIndex) + ") < 0 is not allowed")
 	}
-	sz := list.count()
+	sz := list.Count()
 
 	if endIndex > sz {
 		panic("endIndex(" + strconv.Itoa(endIndex) + ") > listsize(" + strconv.Itoa(sz) + ") is not allowed")
@@ -580,9 +579,9 @@ func (list *List) getNode(index int) *Node {
 		panic("Index=(" + strconv.Itoa(index) + ") < 0 is not allowed")
 	}
 
-	sz := list.count()
+	sz := list.Count()
 	if index >= sz {
-		panic("Index=(" + strconv.Itoa(index) + ") > list-size=(" + strconv.Itoa(list.count()) + ") is not allowed")
+		panic("Index=(" + strconv.Itoa(index) + ") > list-size=(" + strconv.Itoa(list.Count()) + ") is not allowed")
 	}
 
 	// NOTE x >> y is same as x ÷ 2^y
@@ -604,7 +603,7 @@ func (list *List) getNode(index int) *Node {
 
 // getBoundaryNodes ... Return the nodes at the specified indexes
 func (list *List) getBoundaryNodes(start int, end int) (*Node, *Node) {
-	sz := list.count()
+	sz := list.Count()
 	if start >= 0 && start <= end && end <= sz {
 		return list.getNode(start), list.getNode(end - 1)
 	}
@@ -643,7 +642,7 @@ func (list *List) IndexOf(val interface{}) int {
 	if x.val == val {
 		return 0
 	}
-	sz := list.count()
+	sz := list.Count()
 	for i := 0; i < sz; i++ {
 
 		if val == x.val {
@@ -663,7 +662,7 @@ func (list *List) indexOfNode(node *Node) int {
 	if x == node {
 		return 0
 	}
-	sz := list.count()
+	sz := list.Count()
 	for i := 0; i < sz; i++ {
 
 		if node == x {
@@ -769,7 +768,7 @@ func (list *List) Clear() bool {
 
 func (list *List) clear() {
 
-	sz := list.count()
+	sz := list.Count()
 	first := list.firstNode
 	last := list.lastNode
 
@@ -777,7 +776,7 @@ func (list *List) clear() {
 
 		defer func() {
 			if list.parent != nil{
-				//list.close()
+				 //list.close()
 			}
 		}()
 
@@ -897,7 +896,7 @@ func (list *List) log(optionalLabel string) {
 	bld.WriteString(optionalLabel)
 	bld.WriteString(":\n[")
 
-	sz := list.count()
+	sz := list.Count()
 
 
 
@@ -926,19 +925,21 @@ func (list *List) sync() {
 
 	//Check for list beheading!...Head removed
 	if list.firstNode == nil {
+		defer list.Close()
 		panic("Oops. This list was beheaded prior to this action! List beheading is not supported for sublists!")
 		return
 	}
 
 	//Check for list tail docking... the tail was removed
 	if list.lastNode == nil {
+		defer list.Close()
 		panic("Oops. This list was tail-docked(the tail was removed) prior to this action! Tail docking is not supported for sublists!")
 		return
 	}
 
 	//Run core sync method functionality only if the list has a parent
 	if list.parent != nil {
-		parenLen := list.parent.count()
+		parenLen := list.parent.Count()
 		sizeChanged := parenLen != list.parenLen
 
 		if sizeChanged {
@@ -954,12 +955,27 @@ func (list *List) sync() {
 	}
 }
 
-func (list *List) count() int {
+func (list *List) Count() int {
 	list.sync()
 	return list.size
 }
 
+func (list *List) Close() error {
 
-func (list *List) Count() int {
-	return list.size
+	 list.close()
+
+	return nil
+}
+
+func (list *List) close() {
+
+	if list.parent == nil {
+		list.firstNode = nil
+		list.lastNode = nil
+	}
+	list.iter = nil
+	list.nodeIter = nil
+	list.size = 0
+
+
 }
