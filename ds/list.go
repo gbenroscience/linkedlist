@@ -12,26 +12,28 @@ import (
 type AbstractList interface {
 	Add(val interface{})
 	AddVal(val interface{}, index int) bool
-	AddAll(lst *List)
-	AddAllAt(index int, lst *List)
+	AddAll(lst *List) bool
+	AddAllAt(index int, lst *List) bool
 
 	Remove(val interface{}) bool
 	RemoveIndex(index int) bool
-	RemoveAll(lst *List)
-	Clear()
+	RemoveAll(lst *List) *List
+	Clear() bool
 
+
+	Set(index int , val interface{})
 	Get(index int) interface{}
 	ToArray() []interface{}
 	LastElement() interface{}
 
-	SubList(startIndex int, endIndex int) *List
+	SubList(startIndex int, endIndex int) (*List, error)
 
 	IsEmpty() bool
 	Contains(val interface{}) bool
 
 	IndexOf(val interface{}) int
 
-	Log()
+	Log(optionalLabel string)
 }
 
 //Node - A list node
@@ -599,6 +601,14 @@ func (list *List) getBoundaryNodes(start int, end int) (*Node, *Node) {
 }
 
 //Get - returns the element at that index in the list
+func (list *List) Set(index int , val interface{}) {
+	defer list.mu.Unlock()
+	list.mu.Lock()
+	node := list.getNode(index)
+	node.val = val
+}
+
+//Get - returns the element at that index in the list
 func (list *List) Get(index int) interface{} {
 	defer list.mu.Unlock()
 	list.mu.Lock()
@@ -855,13 +865,11 @@ func (list *List) removeLinkedRange(startNode *Node, stopNode *Node) {
 
 }
 
-func (list *List) Log(optionalLabel string) bool {
+func (list *List) Log(optionalLabel string)  {
 	defer list.mu.Unlock()
 
 	list.mu.Lock()
 	list.log(optionalLabel)
-
-	return true
 }
 
 func (list *List) log(optionalLabel string) {

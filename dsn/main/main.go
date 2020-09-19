@@ -353,6 +353,10 @@ func runSuite5(){
 	subList.Log("SubList")
 	sublist.Log("sublist")
 
+	subList.Set(3 ,90000000)
+	subList.Log("SubList...")
+	list.Log("MainList")
+
 	subList.Clear()
 
 	list.Log("MainList")
