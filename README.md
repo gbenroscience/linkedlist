@@ -8,14 +8,18 @@ It may store any type of object.
 
 
 
+## NOTE: Thread safety using channels has been removed due to various issues with it.
+
 1. Thread safety in concurrent access is ensured by using mutexes.
-Thread safety using channels has been removed due to various issues with it.
 
-2. Allows greater manipulation using sublists. You can manipulate portions of the list as though they were a list!
-I would limit this to the basest operations.
+2. Allows greater manipulation using sublists. Sublists are backed by the parent list, so you can manipulate portions of the list as though they were a list!
 
-Create sublists only if you really need to!
-They behave like normal lists too, presenting a view of protions of the list.
+3. Has several methods that allow the user manipulate the list with ease.
+
+
+
+
+Sublists behave like normal lists too, presenting a view of portions of the list.
 e.g.
 
 ```Go
