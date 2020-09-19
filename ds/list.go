@@ -415,10 +415,8 @@ func (list *List) incrementSize(dx int) {
 	if list.parent != nil {
 		list.parent.size += dx
 	}
-
-
-
 }
+
 func (list *List) decrementSize(dx int) {
 	list.size -= dx
 	if list.parent != nil {
@@ -961,5 +959,7 @@ func (list *List) count() int {
 
 
 func (list *List) Count() int {
+	defer list.mu.Unlock()
+	list.mu.Lock()
 	return list.size
 }

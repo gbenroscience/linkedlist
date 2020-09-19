@@ -185,7 +185,7 @@ func test1() {
 
 	list.Log("Checking...")
 
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 3)
 
 	fmt.Println(list.Get(3))
 }
