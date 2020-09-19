@@ -316,12 +316,10 @@ func (list *List) Clone() *List {
 
 	ls := new(List)
 
-	x := list.firstNode
-
-	for ; x != nil; {
-		ls.append(x.val)
-		x = x.next
-	}
+	list.forEachNode(func(node *Node) bool {
+		ls.Add(node.val)
+		return true
+	})
 
 	return ls
 }
@@ -898,14 +896,13 @@ func (list *List) log(optionalLabel string) {
 	sz := list.count()
 
 
-
 	for ; x != nil; x = x.next {
 		bld.WriteString(fmt.Sprintf("%v", x.val))
-		bld.WriteString(", ")
 		counter++
 		if x == list.lastNode {
 			break
 		}
+		bld.WriteString(", ")
 	}
 
 	bld.WriteString("], len:")

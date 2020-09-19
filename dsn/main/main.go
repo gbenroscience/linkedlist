@@ -2,15 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/gbenroscience/linkedlist/dsn"
+	"github.com/gbenroscience/linkedlist/ds"
 	"github.com/gbenroscience/linkedlist/utils"
 	"strconv"
 	"time"
 )
 
-func testAdd(n int) *dsn.List {
+func testAdd(n int) *ds.List {
 
-	list := dsn.NewList()
+	list := ds.NewList()
 	for i := 0; i < n; i++ {
 		list.Add(i)
 	}
@@ -18,9 +18,9 @@ func testAdd(n int) *dsn.List {
 	return list
 }
 
-func testAddFromArgs(itemsToAdd ...interface{}) *dsn.List {
+func testAddFromArgs(itemsToAdd ...interface{}) *ds.List {
 
-	list := dsn.NewList()
+	list := ds.NewList()
 	list.AddValues(itemsToAdd...)
 
 	list.Log("testAddFromArgs")
@@ -28,9 +28,9 @@ func testAddFromArgs(itemsToAdd ...interface{}) *dsn.List {
 	return list
 }
 
-func testAddArray(items []int) *dsn.List {
+func testAddArray(items []int) *ds.List {
 
-	list := dsn.NewList()
+	list := ds.NewList()
 	list.Log("testAddArray-Begins")
 	defer list.Log("testAddArray-Ends")
 
@@ -43,7 +43,7 @@ func testAddArray(items []int) *dsn.List {
 	return list
 }
 
-func testAddValAtIndex(n int, index int, itemsToAdd ...interface{}) *dsn.List {
+func testAddValAtIndex(n int, index int, itemsToAdd ...interface{}) *ds.List {
 
 	list := testAdd(n)
 	list.Log("testAddValAtIndex generated items")
@@ -57,9 +57,9 @@ func testAddValAtIndex(n int, index int, itemsToAdd ...interface{}) *dsn.List {
 	return list
 }
 
-func testAddAll(n int, lst *dsn.List) *dsn.List {
+func testAddAll(n int, lst *ds.List) *ds.List {
 
-	list := dsn.NewList()
+	list := ds.NewList()
 	defer list.Log("testAddAll after adding list!")
 	for i := 0; i < n; i++ {
 		list.Add(i)
@@ -71,7 +71,7 @@ func testAddAll(n int, lst *dsn.List) *dsn.List {
 	return list
 }
 
-func testAddListAtIndex(n int, index int, lst *dsn.List) {
+func testAddListAtIndex(n int, index int, lst *ds.List) {
 
 	list := testAdd(n)
 	list.Log("starting testAddListAtIndex")
@@ -82,12 +82,12 @@ func testAddListAtIndex(n int, index int, lst *dsn.List) {
 
 }
 
-func testLog(list *dsn.List) {
+func testLog(list *ds.List) {
 
 	list.Log("testLog")
 
 }
-func testClear(list *dsn.List) {
+func testClear(list *ds.List) {
 
 	list.Clear()
 
@@ -119,21 +119,21 @@ func runSuite1() {
 
 }
 
-func testRemoveIndex(list *dsn.List, index int) {
+func testRemoveIndex(list *ds.List, index int) {
 	list.Log("Remove from index: before")
 	list.RemoveIndex(index)
 	list.Log("Remove from index: after")
 }
 
-func testRemoveVal(list *dsn.List, val interface{}) {
+func testRemoveVal(list *ds.List, val interface{}) {
 	list.Log("Remove value: before")
 	list.Remove(val)
 	list.Log("Remove value: after")
 }
 
-func testRemoveAll(list *dsn.List) {
+func testRemoveAll(list *ds.List) {
 
-	lst := dsn.NewList()
+	lst := ds.NewList()
 	lst.AddValues(0, 1, 2, 3, 4, 101, 800)
 	lst.Log("removables")
 	list.Log("Remove list: before")
@@ -295,7 +295,7 @@ func testSubListWoesWhenParentChanged(parenSize int, start int, end int) {
 	list.Log("MainList after removing sublist_head...")
 
 	subList.Log("subList_after_being_beheaded")
-	subList.Close()
+
 
 }
 
@@ -348,19 +348,25 @@ func runSuite5(){
 
 	list := testAdd(10)
 	subList , _ := list.SubList(3, 7)
+	sublist := subList.Clone()
 	list.Log("MainList")
 	subList.Log("SubList")
+	sublist.Log("sublist")
 
 	subList.Clear()
 
 	list.Log("MainList")
 	subList.Log("SubList")
+	sublist.Log("sublist")
 
 
 	subList.AddValues(2,9,8)
 
 	list.Log("MainList")
 	subList.Log("SubList")
+	sublist.Log("sublist")
+
+	fmt.Println(sublist.Get(0))
 
 
 
