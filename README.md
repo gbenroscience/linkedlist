@@ -8,10 +8,8 @@ It may store any type of object.
 
 
 
-1. Thread safety in concurrent access is ensured by using channels.
-Always call the Close() function when done with the list however.
-
-This ensures that the channels that ensure thread safety are closed and the for-select construct is exited.
+1. Thread safety in concurrent access is ensured by using mutexes.
+Thread safety using channels has been removed due to various issues with it.
 
 2. Allows greater manipulation using sublists. You can manipulate portions of the list as though they were a list!
 I would limit this to the basest operations and also, DO NOT create sublists of a sublist.
@@ -82,7 +80,7 @@ begin. So you can iterate repeatedly over the same list
 This function is defined as:
 
 ```Go
-  func (list *List) ForEach(function func(val interface{}))
+  func (list *List) ForEach(function func(val interface{}) bool)
 ```
 
 An example would be:
@@ -90,6 +88,7 @@ An example would be:
 ```Go
 func Print(x interface{}){
 	fmt.Printf("Printing list: found %d\n ", x)
+	return true
 }
 
  list.ForEach(Print)
