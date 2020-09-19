@@ -172,6 +172,7 @@ func test1() {
 			for i := 0; i < 100; i++ {
 				list.Add(i)
 			}
+			fmt.Printf("Elem @ index %d is %v\n",3, list.Get(3))
 			fmt.Printf("list now has %d elements\n", list.Count())
 		}()
 	}
