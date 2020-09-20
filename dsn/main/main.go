@@ -158,7 +158,9 @@ func testGetAtIndex() {
 	for i := 0; i < 10; i++ {
 		index := rnd.NextInt(sz)
 		fmt.Printf("index: %d\n", index)
-		val := list.Get(index)
+		val , err := list.Get(index)
+
+		fmt.Printf("error: %v" , err)
 
 		fmt.Printf("Retrieved %v at index %d\n ", val, index)
 	}

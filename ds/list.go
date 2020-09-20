@@ -345,7 +345,10 @@ func (list *List) addAllAt(index int, lst *List) error {
 		oldFirstNode.prev = dup.lastNode
 		list.firstNode = dup.firstNode
 	} else {
-		nodeAtIndex := list.getNode(index)
+		nodeAtIndex , err := list.getNode(index)
+		if err != nil{
+			return err
+		}
 
 		prevNode := nodeAtIndex.prev
 
@@ -375,7 +378,11 @@ func (list *List) addNodeAt(elem *Node, index int) (bool, error) {
 			list.addNode(elem)
 		} else {
 
-			succ := list.getNode(index)
+			succ , err := list.getNode(index)
+
+			if err != nil{
+				return false, err
+			}
 
 			// assert succ != nil;
 			prev := succ.prev
@@ -562,15 +569,15 @@ func (list *List) isSubList() bool {
 /**
  * Returns the (non-nil) Node at the specified element index.
  */
-func (list *List) getNode(index int) *Node {
+func (list *List) getNode(index int) (*Node , error) {
 
 	if index < 0 {
-		panic("Index=(" + strconv.Itoa(index) + ") < 0 is not allowed")
+		return nil , errors.New("Index=(" + strconv.Itoa(index) + ") < 0 is not allowed")
 	}
 
 	sz := list.count()
 	if index >= sz {
-		panic("Index=(" + strconv.Itoa(index) + ") > list-size=(" + strconv.Itoa(list.count()) + ") is not allowed")
+		return nil , errors.New("Index=(" + strconv.Itoa(index) + ") > list-size=(" + strconv.Itoa(list.count()) + ") is not allowed")
 	}
 
 	// NOTE x >> y is same as x ÷ 2^y
@@ -579,13 +586,13 @@ func (list *List) getNode(index int) *Node {
 		for i := 0; i < index; i++ {
 			x = x.next
 		}
-		return x
+		return x , nil
 	} else {
 		x := list.lastNode
 		for i := sz - 1; i > index; i-- {
 			x = x.prev
 		}
-		return x
+		return x , nil
 	}
 
 }
@@ -594,7 +601,10 @@ func (list *List) getNode(index int) *Node {
 func (list *List) getBoundaryNodes(start int, end int) (*Node, *Node) {
 	sz := list.count()
 	if start >= 0 && start <= end && end <= sz {
-		return list.getNode(start), list.getNode(end - 1)
+		nd , _ := list.getNode(start)
+		nd1 , _ := list.getNode(end - 1)
+
+		return nd , nd1
 	}
 
 	return nil, nil
@@ -604,15 +614,21 @@ func (list *List) getBoundaryNodes(start int, end int) (*Node, *Node) {
 func (list *List) Set(index int , val interface{}) {
 	defer list.mu.Unlock()
 	list.mu.Lock()
-	node := list.getNode(index)
-	node.val = val
+	node , err := list.getNode(index)
+	if err == nil{
+		node.val = val
+	}
 }
 
 //Get - returns the element at that index in the list
-func (list *List) Get(index int) interface{} {
+func (list *List) Get(index int) (interface{} , error) {
 	defer list.mu.Unlock()
 	list.mu.Lock()
-	return list.getNode(index).val
+	node , err := list.getNode(index)
+	if err == nil{
+		return node.val , nil
+	}
+	return nil , err
 }
 
 func (list *List) getLastNode() *Node {
