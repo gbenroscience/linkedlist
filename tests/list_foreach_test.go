@@ -13,12 +13,14 @@ func TestForEach(t *testing.T) {
 
 	add(list, 1000)
 
-	go list.ForEach(func(val interface{}) {
+	go list.ForEach(func(val interface{}) bool {
 		fmt.Printf("val-1: %+v\n", val)
+		return true
 	})
 
-	go list.ForEach(func(val interface{}) {
+	go list.ForEach(func(val interface{}) bool{
 		fmt.Printf("val-2: %+v\n", val)
+		return true
 	})
 
 	time.Sleep(time.Second * 10)
