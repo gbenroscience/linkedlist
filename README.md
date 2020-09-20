@@ -138,7 +138,7 @@ An example would be:
 
 ```Go
 func Print(x interface{}) bool{
-	fmt.Printf("Printing list: found %d\n ", x)
+	fmt.Printf("Printing list: found %v\n ", x)
 	return true
 }
 
@@ -150,7 +150,7 @@ The list will iterate over every element in it and call the function on each of 
 Alternatively of course, you may do:
 ```Go
  list.ForEach(func(x interface{})bool {
-   fmt.Printf("Printing list: found %d\n ", x)
+   fmt.Printf("Printing list: found %v\n ", x)
    return true
  })
 ```
