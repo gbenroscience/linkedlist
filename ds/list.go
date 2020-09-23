@@ -43,11 +43,6 @@ type Node struct {
 	val  interface{}
 }
 
-type DataTypePair struct {
-	callback func()
-	shutdown int
-}
-
 //List - The List
 type List struct {
 	size      int
