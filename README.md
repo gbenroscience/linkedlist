@@ -58,7 +58,7 @@ Changes made to the sublist (add , remove, clear, update) are reflected in the p
 If you clear the sublist, it becomes detached from its parent.
 Changes made to the sublist are no longer propagated to the sublist
 
-If you need to have a sublist of a list independent of the original list, then create the sublist as above and call the Clone method o it e.g:
+If you need to have a sublist of a list independent of the original list, then create the sublist as above and call the Clone method on it e.g:
 
 
 ```Go
