@@ -125,26 +125,6 @@ func (list *AnyList[T]) next() *T {
 	}
 
 	return nil
-
-	/*
-		var nilVal T
-
-		if list.iter == nil {
-			if list.firstNode == nil {
-				return nilVal
-			}
-			list.iter = list.firstNode
-			return list.iter.val
-		} else {
-			if list.iter == list.lastNode {
-				return nilVal
-			}
-			if list.iter.next != nil {
-				list.iter = list.iter.next
-				return list.iter.val
-			}
-			return nilVal
-		}*/
 }
 
 // Call this to reset the values iterator

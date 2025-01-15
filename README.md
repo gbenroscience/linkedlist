@@ -6,10 +6,6 @@ It may store any type of object.
  
 ## Features
 
-
-
-## NOTE: Thread safety using channels has been removed due to various issues with it.
-
 1. Thread safety in concurrent access is ensured by using mutexes.
 
 2. Allows greater manipulation using sublists. Sublists are backed by the parent list, so you can manipulate portions of the list as though they were a list!
@@ -17,7 +13,62 @@ It may store any type of object.
 3. Has several methods that allow the user manipulate the list with ease.
 
 
+We now have 3 different implementations of the `linkedlist`.
+The old `List` is now called a `CList` which implies it is left for backwards compatibility with old Golang code that still uses interfaces instead of generics.
 
+We now have 2 list implementations which take advantage of the shiny new `generics` feature available in newer versions of golang.
+
+One of them implements generics using `comparable` and the other uses the broader `any` interface.
+
+We will now look at initializing the 3 types of `linkedlist`.
+
+### Initializing the old `CList`
+
+All that has changed here is the name of the struct, and its initializing function's name.
+
+To initialize it, do:
+```Go
+list := ds.NewCList()
+```
+
+### Initializing the new `List[T comparable]`
+
+The name of the struct is `List`
+
+To initialize it, do:
+```Go
+list := ds.NewList()
+```
+
+
+### Initializing the new `AnyList[T any]`
+
+The name of the struct is `AnyList`
+
+To initialize it, do:
+```Go
+list := ds.NewAnyList()
+```
+
+In order to get the best runtime speed from an AnyList instance, make sure you override the `Equals` function(which is a field of the `AnyList` struct). We have added a generic `Equals` function which will run very slow(and perhaps may be incorrect for some cases). So, whenever you calll
+
+```Go
+list := ds.NewAnyList()
+```
+The next line should be:
+```Go
+list.Equals = func(val1 T, val2 T) bool {
+	return //code that returns true when val1 is same as val2
+	}
+```
+
+This is not necessary for the instance of
+```Go 
+List[T comparable]
+```
+
+
+**All 3 implementations support the SubList functionality.**
 
 Sublists behave like normal lists too, presenting a view of portions of the list.
 e.g.
@@ -28,7 +79,7 @@ package main
 
 func testAdd(n int) *ds.List {
 
-	list := ds.NewList()
+	list := ds.NewList[int]()
 	for i := 0; i < n; i++ {
 		list.Add(i)
 	}
@@ -68,7 +119,7 @@ freeSubList := subList.Clone()
 If the <code>freeSubList</code> above is modified, the changes no longer reflect on the main list.
 
 
-3. Allows quick iteration using the <b>ForEach</b> function
+1. Allows quick iteration using the <b>ForEach</b> function
 
 The old way to iterate over the list was:
 
