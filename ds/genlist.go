@@ -8,16 +8,16 @@ import (
 	"sync"
 )
 
-// abstractList - An abstraction of a list
-type abstractList[T comparable] interface {
+// abstractAnyList - An abstraction of a list
+type abstractAnyList[T any] interface {
 	Add(val T)
 	AddVal(val T, index int) bool
-	AddAll(lst *List[T]) bool
-	AddAllAt(index int, lst *List[T]) bool
+	AddAll(lst *AnyList[T]) bool
+	AddAllAt(index int, lst *AnyList[T]) bool
 
 	Remove(val T) bool
 	RemoveIndex(index int) bool
-	RemoveAll(lst *List[T]) *List[T]
+	RemoveAll(lst *AnyList[T]) *AnyList[T]
 	Clear() bool
 
 	Set(index int, val T)
@@ -25,7 +25,7 @@ type abstractList[T comparable] interface {
 	ToArray() []T
 	LastElement() T
 
-	SubList(startIndex int, endIndex int) (*List[T], error)
+	SubList(startIndex int, endIndex int) (*AnyList[T], error)
 
 	IsEmpty() bool
 	Contains(val T) bool
@@ -35,29 +35,31 @@ type abstractList[T comparable] interface {
 	Log(optionalLabel string)
 }
 
-// lNode - A list node
-type lNode[T comparable] struct {
-	next *lNode[T]
-	prev *lNode[T]
+// node - A list node
+type node[T any] struct {
+	next *node[T]
+	prev *node[T]
 	val  T
 }
 
-// List - The List
-type List[T comparable] struct {
+// AnyList - The AnyList
+type AnyList[T any] struct {
 	size      int
-	firstNode *lNode[T]
-	lastNode  *lNode[T]
-	parent    *List[T]
+	firstNode *node[T]
+	lastNode  *node[T]
+	parent    *AnyList[T]
 	parenLen  int
 	mu        sync.Mutex
 	//Used for rapid iteration over the list's values
-	iter *lNode[T]
+	iter *node[T]
 	//Used for rapid iteration over the list's nodes
-	nodeIter *lNode[T]
+	nodeIter *node[T]
+	// Every instance had better override this function after calling the NewAnyList function in order to gain speed in the Remove, IndexOf and other relevant function
+	Equals func(val1 T, val2 T) bool
 }
 
-func NewList[T comparable]() *List[T] {
-	list := new(List[T])
+func NewAnyList[T any]() *AnyList[T] {
+	list := new(AnyList[T])
 
 	list.size = 0
 	list.parent = nil
@@ -67,11 +69,15 @@ func NewList[T comparable]() *List[T] {
 	list.nodeIter = nil
 	list.mu = sync.Mutex{}
 
+	list.Equals = func(val1 T, val2 T) bool {
+		return fmt.Sprintf("%v", val1) == fmt.Sprintf("%v", val2)
+	}
+
 	return list
 }
 
-func initNode[T comparable](prev *lNode[T], val T, next *lNode[T]) *lNode[T] {
-	node := new(lNode[T])
+func init_node[T any](prev *node[T], val T, next *node[T]) *node[T] {
+	node := new(node[T])
 	node.prev = prev
 	node.next = next
 	node.val = val
@@ -79,11 +85,15 @@ func initNode[T comparable](prev *lNode[T], val T, next *lNode[T]) *lNode[T] {
 	return node
 }
 
-func (node *lNode[T]) isNilValOnNode() bool {
+func (node *node[T]) isNilValOnNode() bool {
 	return new(T) == &node.val
 }
 
-func (list *List[T]) nextNode() *lNode[T] {
+func zero[T any]() *T {
+	return nil
+}
+
+func (list *AnyList[T]) nextNode() *node[T] {
 
 	if list.nodeIter == nil {
 		if list.firstNode == nil {
@@ -105,13 +115,13 @@ func (list *List[T]) nextNode() *lNode[T] {
 }
 
 // Call this to reset the nodes iterator
-func (list *List[T]) resetNodeIterator() {
+func (list *AnyList[T]) resetNodeIterator() {
 	if list.nodeIter != nil {
 		list.nodeIter = nil
 	}
 }
 
-func (list *List[T]) next() T {
+func (list *AnyList[T]) next() T {
 
 	var nilVal T
 
@@ -134,13 +144,13 @@ func (list *List[T]) next() T {
 }
 
 // Call this to reset the values iterator
-func (list *List[T]) resetIterator() {
+func (list *AnyList[T]) resetIterator() {
 	if list.iter != nil {
 		list.iter = nil
 	}
 }
 
-func (list *List[T]) ForEach(function func(val T) bool) {
+func (list *AnyList[T]) ForEach(function func(val T) bool) {
 
 	var x T
 
@@ -162,9 +172,9 @@ func (list *List[T]) ForEach(function func(val T) bool) {
 	}
 }
 
-func (list *List[T]) forEachNodeFrom(start *lNode[T], function func(node *lNode[T]) bool) {
+func (list *AnyList[T]) forEachNodeFrom(start *node[T], function func(node *node[T]) bool) {
 
-	var x *lNode[T]
+	var x *node[T]
 	list.resetNodeIterator()
 	list.nodeIter = start
 
@@ -180,9 +190,9 @@ func (list *List[T]) forEachNodeFrom(start *lNode[T], function func(node *lNode[
 	}
 }
 
-func (list *List[T]) forEachNode(function func(node *lNode[T]) bool) {
+func (list *AnyList[T]) forEachNode(function func(node *node[T]) bool) {
 
-	var x *lNode[T]
+	var x *node[T]
 	list.resetNodeIterator()
 
 	for {
@@ -198,7 +208,7 @@ func (list *List[T]) forEachNode(function func(node *lNode[T]) bool) {
 }
 
 // TESTED
-func (list *List[T]) ToArray() []T {
+func (list *AnyList[T]) ToArray() []T {
 
 	result := make([]T, list.count())
 
@@ -213,7 +223,7 @@ func (list *List[T]) ToArray() []T {
 }
 
 // TESTED
-func (list *List[T]) addNode(elem *lNode[T]) {
+func (list *AnyList[T]) addNode(elem *node[T]) {
 	oldLastNode := list.lastNode
 
 	list.lastNode = elem
@@ -227,7 +237,7 @@ func (list *List[T]) addNode(elem *lNode[T]) {
 }
 
 // TESTED
-func (list *List[T]) Add(val T) {
+func (list *AnyList[T]) Add(val T) {
 	defer list.mu.Unlock()
 
 	list.mu.Lock()
@@ -236,11 +246,11 @@ func (list *List[T]) Add(val T) {
 }
 
 // TESTED
-func (list *List[T]) add(val T) {
+func (list *AnyList[T]) add(val T) {
 	list.append(val)
 }
 
-func (list *List[T]) AddVal(val T, index int) bool {
+func (list *AnyList[T]) AddVal(val T, index int) bool {
 	defer list.mu.Unlock()
 
 	list.mu.Lock()
@@ -250,13 +260,13 @@ func (list *List[T]) AddVal(val T, index int) bool {
 }
 
 // TESTED
-func (list *List[T]) addVal(val T, index int) (bool, error) {
-	node := initNode(nil, val, nil)
+func (list *AnyList[T]) addVal(val T, index int) (bool, error) {
+	node := init_node(nil, val, nil)
 	return list.addNodeAt(node, index)
 
 }
 
-func (list *List[T]) AddValues(args ...T) {
+func (list *AnyList[T]) AddValues(args ...T) {
 	defer list.mu.Unlock()
 
 	list.mu.Lock()
@@ -265,13 +275,13 @@ func (list *List[T]) AddValues(args ...T) {
 }
 
 // TESTED
-func (list *List[T]) addValues(args ...T) {
+func (list *AnyList[T]) addValues(args ...T) {
 	for _, v := range args {
 		list.append(v)
 	}
 }
 
-func (list *List[T]) AddArray(array []T) {
+func (list *AnyList[T]) AddArray(array []T) {
 	defer list.mu.Unlock()
 
 	list.mu.Lock()
@@ -279,11 +289,11 @@ func (list *List[T]) AddArray(array []T) {
 }
 
 // TESTED
-func (list *List[T]) addArray(array []T) {
+func (list *AnyList[T]) addArray(array []T) {
 	list.addValues(array...)
 }
 
-func (list *List[T]) AddAll(lst *List[T]) bool {
+func (list *AnyList[T]) AddAll(lst *AnyList[T]) bool {
 	defer list.mu.Unlock()
 
 	list.mu.Lock()
@@ -293,12 +303,12 @@ func (list *List[T]) AddAll(lst *List[T]) bool {
 }
 
 // TESTED
-func (list *List[T]) addAll(lst *List[T]) error {
+func (list *AnyList[T]) addAll(lst *AnyList[T]) error {
 	err := list.addAllAt(list.count(), lst)
 	return err
 }
 
-func (list *List[T]) AddAllAt(index int, lst *List[T]) bool {
+func (list *AnyList[T]) AddAllAt(index int, lst *AnyList[T]) bool {
 	defer list.mu.Unlock()
 
 	list.mu.Lock()
@@ -307,11 +317,11 @@ func (list *List[T]) AddAllAt(index int, lst *List[T]) bool {
 	return true
 }
 
-func (list *List[T]) Clone() *List[T] {
+func (list *AnyList[T]) Clone() *AnyList[T] {
 
-	ls := new(List[T])
+	ls := new(AnyList[T])
 
-	list.forEachNode(func(node *lNode[T]) bool {
+	list.forEachNode(func(node *node[T]) bool {
 		ls.Add(node.val)
 		return true
 	})
@@ -319,7 +329,7 @@ func (list *List[T]) Clone() *List[T] {
 	return ls
 }
 
-func (list *List[T]) addAllAt(index int, lst *List[T]) error {
+func (list *AnyList[T]) addAllAt(index int, lst *AnyList[T]) error {
 
 	sz := list.count()
 	//empty list
@@ -372,7 +382,7 @@ func (list *List[T]) addAllAt(index int, lst *List[T]) error {
  *  Only parent lists should ever call this function!
  */
 //TESTED
-func (list *List[T]) addNodeAt(elem *lNode[T], index int) (bool, error) {
+func (list *AnyList[T]) addNodeAt(elem *node[T], index int) (bool, error) {
 
 	sz := list.count()
 	if index >= 0 && index <= sz {
@@ -410,21 +420,21 @@ func (list *List[T]) addNodeAt(elem *lNode[T], index int) (bool, error) {
 
 }
 
-func (list *List[T]) incrementSize(dx int) {
+func (list *AnyList[T]) incrementSize(dx int) {
 	list.size += dx
 	if list.parent != nil {
 		list.parent.size += dx
 	}
 }
 
-func (list *List[T]) decrementSize(dx int) {
+func (list *AnyList[T]) decrementSize(dx int) {
 	list.size -= dx
 	if list.parent != nil {
 		list.parent.size -= dx
 	}
 }
 
-func (list *List[T]) removeNode(elem *lNode[T]) bool {
+func (list *AnyList[T]) removeNode(elem *node[T]) bool {
 
 	next := elem.next
 	prev := elem.prev
@@ -449,7 +459,7 @@ func (list *List[T]) removeNode(elem *lNode[T]) bool {
 	return true
 
 }
-func (list *List[T]) removeIndex(index int) bool {
+func (list *AnyList[T]) removeIndex(index int) bool {
 
 	x := list.firstNode
 	for i := 0; i <= index; i++ {
@@ -462,7 +472,7 @@ func (list *List[T]) removeIndex(index int) bool {
 	return false
 }
 
-func (list *List[T]) Remove(val T) bool {
+func (list *AnyList[T]) Remove(val T) bool {
 
 	defer list.mu.Unlock()
 	list.mu.Lock()
@@ -475,7 +485,7 @@ func (list *List[T]) Remove(val T) bool {
  * Remove the first node that has
  * the same value as the parameter
  */
-func (list *List[T]) remove(val T) bool {
+func (list *AnyList[T]) remove(val T) bool {
 
 	//empty list
 	if list.firstNode == nil {
@@ -485,7 +495,7 @@ func (list *List[T]) remove(val T) bool {
 	x := list.firstNode
 	sz := list.count()
 	for i := 0; i < sz; i++ {
-		if x.val == val {
+		if list.Equals(x.val, val) { // if x.val == val{
 			succ := list.removeNode(x)
 
 			return succ
@@ -498,13 +508,13 @@ func (list *List[T]) remove(val T) bool {
 
 }
 
-func (list *List[T]) RemoveIndex(index int) bool {
+func (list *AnyList[T]) RemoveIndex(index int) bool {
 	defer list.mu.Unlock()
 	list.mu.Lock()
 	return list.removeIndex(index)
 }
 
-func (list *List[T]) RemoveAll(lst *List[T]) bool {
+func (list *AnyList[T]) RemoveAll(lst *AnyList[T]) bool {
 	defer list.mu.Unlock()
 	list.mu.Lock()
 	list.removeAll(lst)
@@ -513,7 +523,7 @@ func (list *List[T]) RemoveAll(lst *List[T]) bool {
 }
 
 // TESTED
-func (list *List[T]) removeAll(lst *List[T]) {
+func (list *AnyList[T]) removeAll(lst *AnyList[T]) {
 
 	//empty list
 	if lst.firstNode == nil {
@@ -531,13 +541,13 @@ func (list *List[T]) removeAll(lst *List[T]) {
 
 }
 
-func (list *List[T]) IsEmpty() bool {
+func (list *AnyList[T]) IsEmpty() bool {
 	return list.count() == 0 && list.firstNode == nil
 }
 
 // SubList ...Creates a view of the list... starting at startIndex and ending at endIndex-1.
 // In essence, the element at `endIndex` is not included
-func (list *List[T]) SubList(startIndex int, endIndex int) (*List[T], error) {
+func (list *AnyList[T]) SubList(startIndex int, endIndex int) (*AnyList[T], error) {
 	defer list.mu.Unlock()
 	list.mu.Lock()
 
@@ -554,7 +564,8 @@ func (list *List[T]) SubList(startIndex int, endIndex int) (*List[T], error) {
 		return nil, errors.New("startIndex(" + strconv.Itoa(startIndex) + ") > endIndex(" + strconv.Itoa(endIndex) + ") is not allowed")
 	}
 
-	subList := NewList[T]()
+	subList := NewAnyList[T]()
+	subList.Equals = list.Equals
 	start, end := list.getBoundaryNodes(startIndex, endIndex)
 	subList.firstNode = start
 	subList.lastNode = end
@@ -566,14 +577,14 @@ func (list *List[T]) SubList(startIndex int, endIndex int) (*List[T], error) {
 
 }
 
-func (list *List[T]) isSubList() bool {
+func (list *AnyList[T]) isSubList() bool {
 	return list.parent != nil
 }
 
 /**
  * Returns the (non-nil) Node at the specified element index.
  */
-func (list *List[T]) getNode(index int) (*lNode[T], error) {
+func (list *AnyList[T]) getNode(index int) (*node[T], error) {
 
 	if index < 0 {
 		return nil, errors.New("Index=(" + strconv.Itoa(index) + ") < 0 is not allowed")
@@ -602,7 +613,7 @@ func (list *List[T]) getNode(index int) (*lNode[T], error) {
 }
 
 // getBoundaryNodes ... Return the nodes at the specified indexes
-func (list *List[T]) getBoundaryNodes(start int, end int) (*lNode[T], *lNode[T]) {
+func (list *AnyList[T]) getBoundaryNodes(start int, end int) (*node[T], *node[T]) {
 	sz := list.count()
 	if start >= 0 && start <= end && end <= sz {
 		nd, _ := list.getNode(start)
@@ -615,7 +626,7 @@ func (list *List[T]) getBoundaryNodes(start int, end int) (*lNode[T], *lNode[T])
 }
 
 // Get - returns the element at that index in the list
-func (list *List[T]) Set(index int, val T) {
+func (list *AnyList[T]) Set(index int, val T) {
 	defer list.mu.Unlock()
 	list.mu.Lock()
 	node, err := list.getNode(index)
@@ -625,7 +636,7 @@ func (list *List[T]) Set(index int, val T) {
 }
 
 // Get - returns the element at that index in the list
-func (list *List[T]) Get(index int) (T, error) {
+func (list *AnyList[T]) Get(index int) (T, error) {
 	defer list.mu.Unlock()
 	list.mu.Lock()
 	node, err := list.getNode(index)
@@ -635,33 +646,33 @@ func (list *List[T]) Get(index int) (T, error) {
 	return *zero[T](), err
 }
 
-func (list *List[T]) getLastNode() *lNode[T] {
+func (list *AnyList[T]) getLastNode() *node[T] {
 	return list.lastNode
 }
 
-func (list *List[T]) LastElement() interface{} {
+func (list *AnyList[T]) LastElement() interface{} {
 	defer list.mu.Unlock()
 	list.mu.Lock()
 	return list.getLastNode().val
 }
 
-func (list *List[T]) Contains(val T) bool {
+func (list *AnyList[T]) Contains(val T) bool {
 	return list.IndexOf(val) != -1
 
 }
 
-func (list *List[T]) IndexOf(val T) int {
+func (list *AnyList[T]) IndexOf(val T) int {
 	defer list.mu.Unlock()
 	list.mu.Lock()
 
 	x := list.firstNode
 
-	if x.val == val {
+	if list.Equals(x.val, val) { //if x.val == val
 		return 0
 	}
 	sz := list.count()
 	for i := 0; i < sz; i++ {
-		if val == x.val {
+		if list.Equals(val, x.val) { //if val == x.val
 			return i
 		}
 
@@ -671,7 +682,7 @@ func (list *List[T]) IndexOf(val T) int {
 	return -1
 
 }
-func (list *List[T]) indexOfNode(node *lNode[T]) int {
+func (list *AnyList[T]) indexOfNode(node *node[T]) int {
 
 	x := list.firstNode
 
@@ -692,16 +703,16 @@ func (list *List[T]) indexOfNode(node *lNode[T]) int {
 
 }
 
-func (list *List[T]) containsNode(node *lNode[T]) bool {
+func (list *AnyList[T]) containsNode(node *node[T]) bool {
 	return list.indexOfNode(node) != -1
 }
 
 /**
  * Links val as first element.
  */
-func (list *List[T]) prepend(val T) {
+func (list *AnyList[T]) prepend(val T) {
 	f := list.firstNode
-	newNode := initNode(nil, val, f)
+	newNode := init_node(nil, val, f)
 	list.firstNode = newNode
 	if f == nil {
 		list.lastNode = newNode
@@ -714,10 +725,10 @@ func (list *List[T]) prepend(val T) {
 /**
  * Links val as last element.
  */
-func (list *List[T]) append(val T) {
+func (list *AnyList[T]) append(val T) {
 
 	l := list.lastNode
-	newNode := initNode(l, val, nil)
+	newNode := init_node(l, val, nil)
 	list.lastNode = newNode
 	if l == nil {
 		list.firstNode = newNode
@@ -733,11 +744,11 @@ func (list *List[T]) append(val T) {
  * Return a pointer to the new node that was inserted.
  * This will help with spontaneous insertions
  */
-func (list *List[T]) insertBefore(e T, succ *lNode[T]) *lNode[T] {
+func (list *AnyList[T]) insertBefore(e T, succ *node[T]) *node[T] {
 
 	prev := succ.prev
 
-	newNode := initNode(prev, e, succ)
+	newNode := init_node(prev, e, succ)
 
 	succ.prev = newNode
 	if prev == nil {
@@ -756,11 +767,11 @@ func (list *List[T]) insertBefore(e T, succ *lNode[T]) *lNode[T] {
  * Return a pointer to the new node that was inserted.
  * This will help with spontaneous insertions
  */
-func (list *List[T]) insertAfter(e T, succ *lNode[T]) *lNode[T] {
+func (list *AnyList[T]) insertAfter(e T, succ *node[T]) *node[T] {
 
 	next := succ.next
 
-	newNode := initNode(succ, e, succ.next)
+	newNode := init_node(succ, e, succ.next)
 
 	succ.next = newNode
 	if next == nil {
@@ -773,7 +784,7 @@ func (list *List[T]) insertAfter(e T, succ *lNode[T]) *lNode[T] {
 	return newNode
 }
 
-func (list *List[T]) Clear() bool {
+func (list *AnyList[T]) Clear() bool {
 	defer list.mu.Unlock()
 
 	list.mu.Lock()
@@ -782,7 +793,7 @@ func (list *List[T]) Clear() bool {
 	return true
 }
 
-func (list *List[T]) clear() {
+func (list *AnyList[T]) clear() {
 
 	sz := list.count()
 	first := list.firstNode
@@ -828,7 +839,7 @@ func (list *List[T]) clear() {
 
 	var nilVal = zero[T]()
 
-	list.forEachNode(func(x *lNode[T]) bool {
+	list.forEachNode(func(x *node[T]) bool {
 		next := x.next
 		x.val = *nilVal
 		x.next = nil
@@ -850,7 +861,7 @@ func (list *List[T]) clear() {
 }
 
 // Not tested yet
-func (list *List[T]) removeLinkedRange(startNode *lNode[T], stopNode *lNode[T]) {
+func (list *AnyList[T]) removeLinkedRange(startNode *node[T], stopNode *node[T]) {
 
 	defer list.mu.Unlock()
 	list.mu.Lock()
@@ -886,14 +897,14 @@ func (list *List[T]) removeLinkedRange(startNode *lNode[T], stopNode *lNode[T]) 
 
 }
 
-func (list *List[T]) Log(optionalLabel string) {
+func (list *AnyList[T]) Log(optionalLabel string) {
 	defer list.mu.Unlock()
 
 	list.mu.Lock()
 	list.log(optionalLabel)
 }
 
-func (list *List[T]) log(optionalLabel string) {
+func (list *AnyList[T]) log(optionalLabel string) {
 
 	x := list.firstNode
 
@@ -932,7 +943,7 @@ func (list *List[T]) log(optionalLabel string) {
 
 // sync ... Sublists will use this method to synchronize their lengths with their parents.
 // The core functionality here will run if the parent list size has changed since when the sublist last checked
-func (list *List[T]) sync() {
+func (list *AnyList[T]) sync() {
 
 	//Check for list beheading!...Head removed
 	if list.firstNode == nil {
@@ -962,7 +973,7 @@ func (list *List[T]) sync() {
 		if sizeChanged {
 
 			i := 0
-			list.forEachNode(func(x *lNode[T]) bool {
+			list.forEachNode(func(x *node[T]) bool {
 				i++
 				return true
 			})
@@ -972,12 +983,12 @@ func (list *List[T]) sync() {
 	}
 }
 
-func (list *List[T]) count() int {
+func (list *AnyList[T]) count() int {
 	list.sync()
 	return list.size
 }
 
-func (list *List[T]) Count() int {
+func (list *AnyList[T]) Count() int {
 	defer list.mu.Unlock()
 	list.mu.Lock()
 	return list.size

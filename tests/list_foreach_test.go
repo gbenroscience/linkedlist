@@ -2,14 +2,15 @@ package tests
 
 import (
 	"fmt"
-	"github.com/gbenroscience/linkedlist/ds"
 	"testing"
 	"time"
+
+	"github.com/gbenroscience/linkedlist/ds"
 )
 
 func TestForEach(t *testing.T) {
 
-	list := ds.NewList()
+	list := ds.NewAnyList()
 
 	add(list, 1000)
 
@@ -18,7 +19,7 @@ func TestForEach(t *testing.T) {
 		return true
 	})
 
-	go list.ForEach(func(val interface{}) bool{
+	go list.ForEach(func(val interface{}) bool {
 		fmt.Printf("val-2: %+v\n", val)
 		return true
 	})
@@ -29,7 +30,7 @@ func TestForEach(t *testing.T) {
 
 }
 
-func add(list *ds.List, itemCount int) {
+func add(list *ds.AnyList, itemCount int) {
 	for i := 0; i < itemCount; i++ {
 		list.Add(i)
 	}

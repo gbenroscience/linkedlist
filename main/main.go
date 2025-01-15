@@ -3,13 +3,14 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"github.com/gbenroscience/linkedlist/ds"
-	"github.com/gbenroscience/linkedlist/utils"
 	"math"
 	"math/rand"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/gbenroscience/linkedlist/ds"
+	"github.com/gbenroscience/linkedlist/utils"
 )
 
 type Rect struct {
@@ -77,12 +78,15 @@ func appendText(str1 string, str2 string) string {
 func test() {
 	appendText("GOD ", "IS HERE!!!")
 
-	data := new(ds.List)
-	data = ds.NewList()
+	data := new(ds.AnyList[int])
+	data = ds.NewAnyList[int]()
+
+	data.Equals = func(val1, val2 int) bool {
+		return val1 == val2
+	}
 
 	data.Add(3)
 	data.Add(8)
-	data.Add("9")
 
 	fmt.Println(data.Get(2))
 
@@ -112,7 +116,7 @@ func test() {
 		data.Log("AFTER CLEARING SUB_LIST, MAIN_LIST")
 		smallList.Log("SUB_LIST")
 
-		second := ds.NewList()
+		second := ds.NewAnyList[int]()
 
 		second.Add(5)
 		second.Add(205)
@@ -154,14 +158,14 @@ func test() {
 	}
 
 }
-func Print(x interface{})  bool{
+func Print(x int) bool {
 	fmt.Printf("Printing list: found %d\n", x)
 	return true
 }
 
 func test1() {
 
-	list := ds.NewList()
+	list := ds.NewAnyList[int]()
 
 	var wg sync.WaitGroup
 
@@ -174,11 +178,11 @@ func test1() {
 				list.Add(i)
 			}
 
-			val , err := list.Get(3)
-			if err != nil{
+			val, err := list.Get(3)
+			if err != nil {
 				fmt.Printf("error %v\n", err)
 			}
-			fmt.Printf("Elem @ index %d is %v\n",3, val)
+			fmt.Printf("Elem @ index %d is %v\n", 3, val)
 			fmt.Printf("list now has %d elements\n", list.Count())
 		}()
 	}
@@ -198,7 +202,7 @@ func test1() {
 
 func test2() {
 
-	list := ds.NewList()
+	list := ds.NewAnyList[int]()
 
 	for i := 0; i < 10; i++ {
 		list.Add(i)
@@ -216,24 +220,9 @@ func test2() {
 	fmt.Println(list.Get(3))
 }
 
+func testAdd(n int) *ds.AnyList[int] {
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-func testAdd(n int) *ds.List {
-
-	list := ds.NewList()
+	list := ds.NewAnyList[int]()
 	for i := 0; i < n; i++ {
 		list.Add(i)
 	}
@@ -241,9 +230,9 @@ func testAdd(n int) *ds.List {
 	return list
 }
 
-func testAddFromArgs(itemsToAdd ...interface{}) *ds.List {
+func testAddFromArgs(itemsToAdd ...int) *ds.AnyList[int] {
 
-	list := ds.NewList()
+	list := ds.NewAnyList[int]()
 	list.AddValues(itemsToAdd...)
 
 	list.Log("testAddFromArgs")
@@ -251,13 +240,13 @@ func testAddFromArgs(itemsToAdd ...interface{}) *ds.List {
 	return list
 }
 
-func testAddArray(items []int) *ds.List {
+func testAddArray(items []int) *ds.AnyList[int] {
 
-	list := ds.NewList()
+	list := ds.NewAnyList[int]()
 	list.Log("testAddArray-Begins")
 	defer list.Log("testAddArray-Ends")
 
-	arrInterface := make([]interface{}, len(items))
+	arrInterface := make([]int, len(items))
 	for i, v := range items {
 		arrInterface[i] = v
 	}
@@ -266,7 +255,7 @@ func testAddArray(items []int) *ds.List {
 	return list
 }
 
-func testAddValAtIndex(n int, index int, itemsToAdd ...interface{}) *ds.List {
+func testAddValAtIndex(n int, index int, itemsToAdd ...int) *ds.AnyList[int] {
 
 	list := testAdd(n)
 	list.Log("testAddValAtIndex generated items")
@@ -280,9 +269,9 @@ func testAddValAtIndex(n int, index int, itemsToAdd ...interface{}) *ds.List {
 	return list
 }
 
-func testAddAll(n int, lst *ds.List) *ds.List {
+func testAddAll(n int, lst *ds.AnyList[int]) *ds.AnyList[int] {
 
-	list := ds.NewList()
+	list := ds.NewAnyList[int]()
 	defer list.Log("testAddAll after adding list!")
 	for i := 0; i < n; i++ {
 		list.Add(i)
@@ -294,7 +283,7 @@ func testAddAll(n int, lst *ds.List) *ds.List {
 	return list
 }
 
-func testAddListAtIndex(n int, index int, lst *ds.List) {
+func testAddListAtIndex(n int, index int, lst *ds.AnyList[int]) {
 
 	list := testAdd(n)
 	list.Log("starting testAddListAtIndex")
@@ -305,12 +294,12 @@ func testAddListAtIndex(n int, index int, lst *ds.List) {
 
 }
 
-func testLog(list *ds.List) {
+func testLog(list *ds.AnyList[int]) {
 
 	list.Log("testLog")
 
 }
-func testClear(list *ds.List) {
+func testClear(list *ds.AnyList[int]) {
 
 	list.Clear()
 
@@ -339,24 +328,23 @@ func runSuite1() {
 
 	testAddAll(20, lst)
 
-
 }
 
-func testRemoveIndex(list *ds.List, index int) {
+func testRemoveIndex(list *ds.AnyList[int], index int) {
 	list.Log("Remove from index: before")
 	list.RemoveIndex(index)
 	list.Log("Remove from index: after")
 }
 
-func testRemoveVal(list *ds.List, val interface{}) {
+func testRemoveVal(list *ds.AnyList[int], val int) {
 	list.Log("Remove value: before")
 	list.Remove(val)
 	list.Log("Remove value: after")
 }
 
-func testRemoveAll(list *ds.List) {
+func testRemoveAll(list *ds.AnyList[int]) {
 
-	lst := ds.NewList()
+	lst := ds.NewAnyList[int]()
 	lst.AddValues(0, 1, 2, 3, 4, 101, 800)
 	lst.Log("removables")
 	list.Log("Remove list: before")
@@ -381,9 +369,9 @@ func testGetAtIndex() {
 	for i := 0; i < 10; i++ {
 		index := rnd.NextInt(sz)
 		fmt.Printf("index: %d\n", index)
-		val , err := list.Get(index)
+		val, err := list.Get(index)
 
-		fmt.Printf("error: %v" , err)
+		fmt.Printf("error: %v", err)
 
 		fmt.Printf("Retrieved %v at index %d\n ", val, index)
 	}
@@ -432,7 +420,7 @@ func testForEach(parenSize int, start int, end int) {
 
 	list.Log("MainList")
 
-	list.ForEach(func(val interface{}) bool {
+	list.ForEach(func(val int) bool {
 		fmt.Printf("See list elem: %v\n", val)
 		return true
 	})
@@ -442,7 +430,7 @@ func testForEach(parenSize int, start int, end int) {
 		fmt.Printf("error: %v", err)
 	}
 
-	subList.ForEach(func(val interface{}) bool {
+	subList.ForEach(func(val int) bool {
 		fmt.Printf("See sub-list elem: %v\n", val)
 		return true
 	})
@@ -455,7 +443,7 @@ func testToArray(parenSize int, start int, end int) {
 
 	list.Log("MainList")
 
-	list.ForEach(func(val interface{}) bool {
+	list.ForEach(func(val int) bool {
 		fmt.Printf("See list elem: %v\n", val)
 		return true
 	})
@@ -521,7 +509,6 @@ func testSubListWoesWhenParentChanged(parenSize int, start int, end int) {
 
 	subList.Log("subList_after_being_beheaded")
 
-
 }
 
 func testSubListClear(parenSize int, start int, end int) {
@@ -542,14 +529,11 @@ func testSubListClear(parenSize int, start int, end int) {
 
 	subList.Log("subList_after_clearing")
 
-
 	list.Log("MainList... after clearing sublist")
 
 	list.Clear()
 
 	list.Log("MainList... after clearing")
-
-
 
 }
 
@@ -563,22 +547,21 @@ func runSuite4() {
 
 	testSubListModify(50, 20, 40)
 
-
 	testSubListWoesWhenParentChanged(50, 20, 40)
 
 	testSubListClear(50, 22, 30)
 }
 
-func runSuite5(){
+func runSuite5() {
 
 	list := testAdd(10)
-	subList , _ := list.SubList(3, 7)
-	sublist , _ := list.SubList(3, 7)
+	subList, _ := list.SubList(3, 7)
+	sublist, _ := list.SubList(3, 7)
 	list.Log("MainList")
 	subList.Log("SubList")
 	sublist.Log("sublist")
 
-	subList.Set(3 ,90000000)
+	subList.Set(3, 90000000)
 	subList.Log("SubList...")
 	list.Log("MainList")
 
@@ -588,8 +571,7 @@ func runSuite5(){
 	subList.Log("SubList")
 	sublist.Log("sublist")
 
-
-	subList.AddValues(2,9,8)
+	subList.AddValues(2, 9, 8)
 
 	list.Log("MainList")
 	subList.Log("SubList")
@@ -597,11 +579,7 @@ func runSuite5(){
 
 	fmt.Println(sublist.Get(0))
 
-
-
 }
-
-
 
 func main() {
 	test1()
