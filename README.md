@@ -35,9 +35,9 @@ list := ds.NewCList()
 
 The name of the struct is `List`
 
-To initialize it, do:
+To initialize it as a list that stores integers, do:
 ```Go
-list := ds.NewList()
+list := ds.NewList[int]()
 ```
 
 
@@ -45,15 +45,15 @@ list := ds.NewList()
 
 The name of the struct is `AnyList`
 
-To initialize it, do:
+To initialize it as a list that stores integers, do:
 ```Go
-list := ds.NewAnyList()
+list := ds.NewAnyList[int]()
 ```
 
-In order to get the best runtime speed from an AnyList instance, make sure you override the `Equals` function(which is a field of the `AnyList` struct). We have added a generic `Equals` function which will run very slow(and perhaps may be incorrect for some cases). So, whenever you calll
+In order to get the best runtime speed from an AnyList instance, make sure you override the `Equals` function(which is a field of the `AnyList` struct). We have added a generic `Equals` function which will run very slow(and perhaps may be incorrect for some cases). So, whenever you call
 
 ```Go
-list := ds.NewAnyList()
+list := ds.NewAnyList[int]()
 ```
 The next line should be:
 ```Go
@@ -134,7 +134,7 @@ The old way to iterate over the list was:
 	}
  ```
 
-But we have removed the list.Next() method. The standard way to iterate over the list now is to use the <b>ForEach</b> function.
+But we have removed the `list.Next()` method. The standard way to iterate over the list now is to use the <b>ForEach</b> function.
 
 ```Go
   func (list *List) ForEach(function func(val interface{}))
@@ -142,11 +142,15 @@ But we have removed the list.Next() method. The standard way to iterate over the
 
 ### More on Iteration:
 
-To iterate through the list, do not use the list.Get(index) function in a loop as that runs in O(n) time and so will give you O(n<sup>2</sup>) performance.
+To iterate through the list, do not use the 
+```Go 
+list.Get(index)
+```
+ function in a loop as that runs in O(n) time and so will give you O(n<sup>2</sup>) performance.
 Instead , say you created the list like this:
 
 ```Go
-list := ds.NewList()
+list := ds.NewList[int]()
  ```
 
 
@@ -162,7 +166,7 @@ fmt.Printf("list now has %d elements\n" , list.Size))
  Then iterate over it like this:
  
  ```Go
-	list.ForEach(func(x interface{}) bool{
+	list.ForEach(func(x int) bool{
 	   //do stuff
 	   
 	   return true// if you want the loop to continue to the end, return true. If you want the function to break out, return false.
@@ -179,13 +183,27 @@ begin. So you can iterate repeatedly over the same list
 
 ## Using the ForEach function For Iteration
 
-This function is defined as:
+For the `CList`, this function is defined as:
 
 ```Go
-  func (list *List) ForEach(function func(val interface{}) bool)
+  func (list *CList) ForEach(function func(val interface{}) bool)
 ```
 
-An example would be:
+For the `List`, this function is defined as:
+
+```Go
+  func (list *List[T]) ForEach(function func(val T) bool)
+```
+
+For the `AnyList`, this function is defined as:
+
+```Go
+  func (list *AnyList[T]) ForEach(function func(val T) bool)
+```
+
+
+
+An example for the old `CList` would be:
 
 ```Go
 func Print(x interface{}) bool{
@@ -194,7 +212,6 @@ func Print(x interface{}) bool{
 }
 
  list.ForEach(Print)
-
 ```
 The list will iterate over every element in it and call the function on each of them (e.g Print or whatever) 
 
@@ -205,3 +222,5 @@ Alternatively of course, you may do:
    return true
  })
 ```
+
+The same technique applies for the `List` and `AnyList` 
