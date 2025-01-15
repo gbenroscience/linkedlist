@@ -89,10 +89,6 @@ func (node *node[T]) isNilValOnNode() bool {
 	return new(T) == &node.val
 }
 
-func zero[T any]() *T {
-	return nil
-}
-
 func (list *AnyList[T]) nextNode() *node[T] {
 
 	if list.nodeIter == nil {
@@ -121,26 +117,34 @@ func (list *AnyList[T]) resetNodeIterator() {
 	}
 }
 
-func (list *AnyList[T]) next() T {
+func (list *AnyList[T]) next() *T {
 
-	var nilVal T
-
-	if list.iter == nil {
-		if list.firstNode == nil {
-			return nilVal
-		}
-		list.iter = list.firstNode
-		return list.iter.val
-	} else {
-		if list.iter == list.lastNode {
-			return nilVal
-		}
-		if list.iter.next != nil {
-			list.iter = list.iter.next
-			return list.iter.val
-		}
-		return nilVal
+	var next = list.nextNode()
+	if next != nil {
+		return &next.val
 	}
+
+	return nil
+
+	/*
+		var nilVal T
+
+		if list.iter == nil {
+			if list.firstNode == nil {
+				return nilVal
+			}
+			list.iter = list.firstNode
+			return list.iter.val
+		} else {
+			if list.iter == list.lastNode {
+				return nilVal
+			}
+			if list.iter.next != nil {
+				list.iter = list.iter.next
+				return list.iter.val
+			}
+			return nilVal
+		}*/
 }
 
 // Call this to reset the values iterator
@@ -152,20 +156,18 @@ func (list *AnyList[T]) resetIterator() {
 
 func (list *AnyList[T]) ForEach(function func(val T) bool) {
 
-	var x T
+	x := new(T)
 
 	defer list.mu.Unlock()
 	list.mu.Lock()
 	list.resetIterator()
 
-	var zero = zero[T]()
-
 	for {
 		x = list.next()
-		if &x == zero {
+		if x == nil {
 			break
 		}
-		if !function(x) {
+		if !function(*x) {
 			break
 		}
 
@@ -436,6 +438,7 @@ func (list *AnyList[T]) decrementSize(dx int) {
 
 func (list *AnyList[T]) removeNode(elem *node[T]) bool {
 
+	var nilVal T
 	next := elem.next
 	prev := elem.prev
 
@@ -453,8 +456,7 @@ func (list *AnyList[T]) removeNode(elem *node[T]) bool {
 		elem.next = nil
 	}
 
-	var zero = zero[T]()
-	elem.val = *zero
+	elem.val = nilVal
 	list.decrementSize(1)
 	return true
 
@@ -643,7 +645,8 @@ func (list *AnyList[T]) Get(index int) (T, error) {
 	if err == nil {
 		return node.val, nil
 	}
-	return *zero[T](), err
+	var nilVal T
+	return nilVal, err
 }
 
 func (list *AnyList[T]) getLastNode() *node[T] {
@@ -837,11 +840,11 @@ func (list *AnyList[T]) clear() {
 		}
 	}
 
-	var nilVal = zero[T]()
+	var nilVal T
 
 	list.forEachNode(func(x *node[T]) bool {
 		next := x.next
-		x.val = *nilVal
+		x.val = nilVal
 		x.next = nil
 		x.prev = nil
 		x = next
@@ -879,14 +882,14 @@ func (list *AnyList[T]) removeLinkedRange(startNode *node[T], stopNode *node[T])
 
 		x := startNode
 
-		var nilVal = zero[T]()
+		var nilVal T
 		i := 0
 		for {
-			x.val = *nilVal
+			x.val = nilVal
 			x = x.next
 			i++
 			if x == stopNode {
-				x.val = *nilVal
+				x.val = nilVal
 				i++
 				break
 			}

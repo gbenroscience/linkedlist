@@ -584,14 +584,13 @@ func runSuite5() {
 func main() {
 	test1()
 
-	/*	runSuite1()
-		runSuite2()
-		runSuite3()
+	runSuite1()
+	//	runSuite2()
+	//	runSuite3()
 
-		runSuite4()
-	*/
+	//	runSuite4()
 
-	runSuite5()
+	//runSuite5()
 	time.Sleep(time.Second * 4)
 
 }
