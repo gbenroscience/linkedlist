@@ -10,16 +10,16 @@ import (
 
 func TestForEach(t *testing.T) {
 
-	list := ds.NewAnyList()
+	list := ds.NewAnyList[int]()
 
 	add(list, 1000)
 
-	go list.ForEach(func(val interface{}) bool {
+	go list.ForEach(func(val int) bool {
 		fmt.Printf("val-1: %+v\n", val)
 		return true
 	})
 
-	go list.ForEach(func(val interface{}) bool {
+	go list.ForEach(func(val int) bool {
 		fmt.Printf("val-2: %+v\n", val)
 		return true
 	})
@@ -30,7 +30,7 @@ func TestForEach(t *testing.T) {
 
 }
 
-func add(list *ds.AnyList, itemCount int) {
+func add(list *ds.AnyList[int], itemCount int) {
 	for i := 0; i < itemCount; i++ {
 		list.Add(i)
 	}
